@@ -10,6 +10,7 @@ does the work and accepts optional plugin ids (default: every plugin under
 | `just dev [plugin...]`       | Run `npm run dev` for each plugin in parallel until Ctrl+C                 |
 | `just test [plugin...]`      | Run each plugin's `npm test` (plugins without tests are skipped)           |
 | `just release [plugin...]`   | Build, then assemble `<plugin>/release/`; does not install into MMA        |
+| `just package [plugin...]`   | `release`, then zip into `dist/`; also the all-plugins bundle when no names are given |
 | `just new <name> [template]` | Create `plugins/<name>` from a template; asks for one when omitted         |
 
 A plugin's dependencies are installed with `npm install` the first time a
@@ -39,6 +40,34 @@ recreates `<plugin>/release/` as `build/` plus `README.md` and `LICENSE` (the
 plugin's own, else `sidecar/LICENSE`). It fails if `build/` lacks something the
 manifest promises, such as an unbuilt sidecar exe. Generated payloads are never
 edited by hand.
+
+## Packaging and GitHub releases
+
+`just package` runs `release`, then `scripts/package.mjs` zips each
+`release/` into `dist/<id>-<version>.zip`. Each zip has a top-level `<id>/`
+folder so it unzips straight into MMA's plugins folder. With no plugin names it
+also writes `dist/mma-plugins-all.zip` containing every plugin. `dist/` is
+ignored by git.
+
+`.github/workflows/release.yml` publishes releases when `main` is pushed:
+
+1. `scripts/ci-plan.mjs` marks a plugin as bumped when no git tag
+   `<id>-v<version>` exists. So releasing is: raise `version` in
+   `plugins/<id>/manifest.json`, push to `main`. Nothing happens when no
+   version is new.
+2. For plugins with a sidecar, `scripts/ci-sidecar.mjs` reuses the exe from the
+   plugin's latest release if nothing under `sidecar/` changed since that
+   release's tag; otherwise it compiles it (MSYS2 gcc, `setup.mjs`,
+   `cargo build --release`, Rust build cached).
+3. `just package` builds and zips every plugin.
+4. `scripts/ci-publish.mjs` creates one release per bumped plugin (tag
+   `<id>-v<version>`, asset `<id>-<version>.zip`, notes from the commits that
+   touched that plugin) and recreates the rolling `latest` release holding
+   `mma-plugins-all.zip` with every plugin at its current version.
+
+The first run on a repository with no tags releases every plugin. Run
+`node scripts/ci-plan.mjs` locally to see what a push would release. The
+workflow can also be started by hand (`workflow_dispatch`).
 
 ## Sidecars
 

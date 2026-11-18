@@ -1,0 +1,79 @@
+name: Release
+
+# Releases a plugin when its manifest version has no tag yet (<id>-v<version>), so bumping a
+# version in plugins/<id>/manifest.json and pushing to main is the whole release process.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/**"
+      - "scaffold/**"
+      - "scripts/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tags and history are needed to plan the release and write notes
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: extractions/setup-just@v2
+
+      - name: Plan
+        id: plan
+        run: node scripts/ci-plan.mjs
+
+      # Toolchain for compiling a sidecar: only when one has changed since its last release.
+      - name: MSYS2 (mingw64 gcc)
+        if: steps.plan.outputs.release == 'true' && steps.plan.outputs.build == 'true'
+        id: msys
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-gcc
+
+      - name: Put mingw64 on PATH
+        if: steps.plan.outputs.release == 'true' && steps.plan.outputs.build == 'true'
+        run: echo "${{ steps.msys.outputs.msys2-location }}\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - name: Cache Rust build
+        if: steps.plan.outputs.release == 'true' && steps.plan.outputs.build == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: plugins/weatherPlus/sidecar
+          cache-targets: true
+
+      - name: Sidecar executables
+        if: steps.plan.outputs.release == 'true'
+        env:
+          PLAN: ${{ steps.plan.outputs.plan }}
+        run: node scripts/ci-sidecar.mjs
+
+      - name: Build and zip every plugin
+        if: steps.plan.outputs.release == 'true'
+        run: just package
+
+      - name: Publish releases
+        if: steps.plan.outputs.release == 'true'
+        env:
+          PLAN: ${{ steps.plan.outputs.plan }}
+        run: node scripts/ci-publish.mjs
