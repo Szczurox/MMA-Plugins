@@ -12,6 +12,7 @@ src/index.ts              registers the `example` field and one provider that po
 src/procedure.ts          configure(cfg) and map(rows): returns {id, patch: {extra: {example}}}; fails invalid rows
 test/procedure.test.mjs   mocked `mma`; runs against build/procedure.js
 README.md                 user-facing description; copied into release/
+CHANGES.md                `## <version>` entries, newest first; the entry for the released version is the release notes
 ```
 
 - The guest has no DOM or Node APIs. Keep pure logic testable and the provider wiring in `src/index.ts`.

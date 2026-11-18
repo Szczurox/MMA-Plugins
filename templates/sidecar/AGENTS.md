@@ -15,6 +15,7 @@ sidecar/                  Rust crate mma-__SLUG__
   Cargo.toml                serde and serde_json only
   src/main.rs               reads a JSON array of rows on stdin, prints one JSON object per row
 README.md                 user-facing description; copied into release/
+CHANGES.md                `## <version>` entries, newest first; the entry for the released version is the release notes
 ```
 
 - Build the helper with `cargo build --release` in `sidecar/`. `build/` then includes

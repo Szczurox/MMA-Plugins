@@ -12,16 +12,17 @@ MMA-Plugins/
     package.json
     tsconfig.json
     README.md
+    CHANGES.md           per-version change log; feeds the release notes
     src/index.ts[x]      UI entry point
     src/procedure.ts     enrichment procedure, optional
     test/                procedure tests, optional
     sidecar/             Rust helper crate, optional
     build/               generated: installable runtime payload
-    release/             generated: build/ + README + LICENSE
+    release/             generated: build/ + README + CHANGES.md + LICENSE
   scaffold/              shared build, release and dev scripts, SDK typings
   scripts/               repo task scripts driven by the justfile
   templates/             plugin templates used by `just new`
-  justfile               sync, test, release and new recipes
+  justfile               sync, dev, test, release, package, publish and new recipes
   docs/                  this documentation
   .claude/rules/         implementation and verification rules
 ```
@@ -39,7 +40,9 @@ copied into a plugin; plugin scripts reach it through `../../scaffold/`.
 | `src/procedure.ts`     | Enrichment logic run in the host's QuickJS guest                                              |
 | `test/*.test.mjs`      | Tests run against the built procedure with a mocked `mma`                                     |
 | `sidecar/`             | Optional Rust crate; its compiled exe ships as `sidecar/<name>.exe`                           |
-| `README.md`, `LICENSE` | Documentation and license, added to `release/` only                                           |
+| `README.md`            | Documentation, added to `release/`                                                            |
+| `CHANGES.md`           | `## <version>` entries, newest first; the entry for the released version is the release notes |
+| `LICENSE`              | License, added to `release/` only (the plugin's own, else `sidecar/LICENSE`)                  |
 
 The plugin id is also its folder name, storage namespace and sidecar key.
 Never change it casually.

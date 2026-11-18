@@ -86,6 +86,9 @@ const gccInclude = run("gcc", ["-print-file-name=include"]).out;
 need(existsSync(gccInclude), `gcc include directory not found (${gccInclude})`);
 const mingwInclude = join(dirname(dirname(run("gcc", ["-print-prog-name=gcc"]).out)), "include");
 const extra = [mingwInclude, gccInclude].filter((p) => existsSync(p)).map((p) => `-I${fwd(p)}`);
+// Newer gcc (and clang 20's own headers) both define max_align_t, which bindgen reports as a
+// redefinition error. Defining clang's include guard makes it use gcc's definition only.
+extra.push("-D__CLANG_MAX_ALIGN_T_DEFINED");
 
 mkdirSync(join(here, ".cargo"), { recursive: true });
 writeFileSync(
