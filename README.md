@@ -4,13 +4,12 @@ Plugins for [Map Making App](https://github.com/ccmdi/mma).
 
 ## Plugins
 
-| Plugin                               | Purpose                                                          | Download                                                                                 |
-| ------------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **[Moon](plugins/moon/)**            | Moon direction, altitude, phase and visibility for each location | [Download](https://github.com/Szczurox/Geoguessr/releases?q=moon-v&expanded=true)        |
-| **[Pointer](plugins/pointer/)**      | Street View controls for pointing at (panning to) things         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=pointer-v&expanded=true)     |
-| **[Weather+](plugins/weatherPlus/)** | Historical ERA5 cloud cover at a location's capture time         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true) |
-| ━━━━━━━━                             | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━         | ━━━━━━━━                                                                                 |
-| **Bundle**                           | **Every plugin above in one zip** (`mma-plugins-all.zip`)        | **[Download](https://github.com/Szczurox/Geoguessr/releases/tag/bundle)**                |
+| Plugin                               | Purpose                             | Download                                                                                 |
+| ------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| **[Moon](plugins/moon/)**            | Moon position, phase and visibility | [Download](https://github.com/Szczurox/Geoguessr/releases?q=moon-v&expanded=true)        |
+| **[Pointer](plugins/pointer/)**      | Pan Street View to a target         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=pointer-v&expanded=true)     |
+| **[Weather+](plugins/weatherPlus/)** | Historical cloud cover (ERA5)       | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true) |
+| **Bundle**                           | **All plugins in one zip**          | **[Download](https://github.com/Szczurox/Geoguessr/releases/tag/bundle)**                |
 
 Each plugin has its own `README.md`; Download opens its releases, newest first.
 
