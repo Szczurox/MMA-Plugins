@@ -3,7 +3,8 @@
 //   node scaffold/release-plugin.mjs <plugin-directory>
 //
 // Run it after the plugin has been built (sync.mjs --release does both). release/ is build/ plus
-// LICENSE (the plugin's own, else the sidecar's) and README.md, recreated from scratch each time.
+// LICENSE (the plugin's own, else the sidecar's), README.md and CHANGES.md, recreated from scratch
+// each time.
 // Fails when build/ lacks something the manifest promises, e.g. an unbuilt sidecar exe.
 
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
@@ -28,7 +29,9 @@ export function releasePlugin(pluginDir) {
 
 	const license = [join(src, "LICENSE"), join(src, "sidecar", "LICENSE")].find(existsSync);
 	if (license) copyFileSync(license, join(out, "LICENSE"));
-	if (existsSync(join(src, "README.md"))) copyFileSync(join(src, "README.md"), join(out, "README.md"));
+	for (const doc of ["README.md", "CHANGES.md"]) {
+		if (existsSync(join(src, doc))) copyFileSync(join(src, doc), join(out, doc));
+	}
 
 	return { id: manifest.id, version: manifest.version, dir: out };
 }

@@ -4,13 +4,15 @@ Plugins for [Map Making App](https://github.com/ccmdi/mma).
 
 ## Plugins
 
-| Plugin       | Purpose                                                          | Source                                         |
-| ------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
-| **Moon**     | Moon direction, altitude, phase and visibility for each location | [`plugins/moon/`](plugins/moon/)               |
-| **Pointer**  | Street View controls for pointing at (panning to) things         | [`plugins/pointer/`](plugins/pointer/)         |
-| **Weather+** | Historical ERA5 cloud cover at a location's capture time         | [`plugins/weatherPlus/`](plugins/weatherPlus/) |
+| Plugin                               | Purpose                                                          | Download                                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **[Moon](plugins/moon/)**            | Moon direction, altitude, phase and visibility for each location | [Download](https://github.com/Szczurox/Geoguessr/releases?q=moon-v&expanded=true)          |
+| **[Pointer](plugins/pointer/)**      | Street View controls for pointing at (panning to) things         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=pointer-v&expanded=true)       |
+| **[Weather+](plugins/weatherPlus/)** | Historical ERA5 cloud cover at a location's capture time         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true)   |
+| ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ |
+| **Bundle**                           | **Every plugin above in one zip** (`mma-plugins-all.zip`)        | **[Download](https://github.com/Szczurox/Geoguessr/releases/tag/bundle)**                  |
 
-Each plugin contains its own `README.md` that goes into more detail.
+Each plugin has its own `README.md`; Download opens its releases, newest first.
 
 ## Development
 
@@ -24,6 +26,7 @@ just dev [plugin...]         # watch and sync on every change until Ctrl+C
 just test [plugin...]        # run plugin tests
 just release [plugin...]     # build and assemble <plugin>/release/
 just package [plugin...]     # release, then zip into dist/ (plus the all-plugins bundle when no names)
+just publish [--dry-run]     # GitHub releases for plugins whose version has no tag yet
 just new <name> [template]   # create plugins/<name> from templates/ (basic, procedure, sidecar)
 ```
 
@@ -33,5 +36,10 @@ close it first if a plugin's sidecar executable is in use.
 
 A single plugin can also be driven from its own folder with `npm run build`,
 `npm test` or `npm run dev`. `build/` is the installable payload and `release/`
-adds the README and LICENSE for distribution; both are generated and ignored
-by git. See [docs/](docs/) for the architecture and build flow.
+adds the README, CHANGES.md and LICENSE for distribution; both are generated and
+ignored by git.
+
+To release: bump `version` in the plugin's `manifest.json`, add a `## <version>`
+entry to its `CHANGES.md` (the text becomes the release notes), commit and push to
+`main`, then run `just publish`. It needs the [GitHub CLI](https://cli.github.com)
+logged in. See [docs/](docs/) for the architecture and build flow.

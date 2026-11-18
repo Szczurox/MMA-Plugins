@@ -11,6 +11,7 @@ does the work and accepts optional plugin ids (default: every plugin under
 | `just test [plugin...]`      | Run each plugin's `npm test` (plugins without tests are skipped)           |
 | `just release [plugin...]`   | Build, then assemble `<plugin>/release/`; does not install into MMA        |
 | `just package [plugin...]`   | `release`, then zip into `dist/`; also the all-plugins bundle when no names are given |
+| `just publish [--dry-run]`   | Create GitHub releases for plugin versions that have no tag yet            |
 | `just new <name> [template]` | Create `plugins/<name>` from a template; asks for one when omitted         |
 
 A plugin's dependencies are installed with `npm install` the first time a
@@ -36,8 +37,8 @@ every output line with the plugin name.
 ## Release
 
 `scaffold/release-plugin.mjs` (run by `just release` or `npm run release`)
-recreates `<plugin>/release/` as `build/` plus `README.md` and `LICENSE` (the
-plugin's own, else `sidecar/LICENSE`). It fails if `build/` lacks something the
+recreates `<plugin>/release/` as `build/` plus `README.md`, `CHANGES.md` and
+`LICENSE` (the plugin's own, else `sidecar/LICENSE`). It fails if `build/` lacks something the
 manifest promises, such as an unbuilt sidecar exe. Generated payloads are never
 edited by hand.
 
@@ -49,25 +50,38 @@ folder so it unzips straight into MMA's plugins folder. With no plugin names it
 also writes `dist/mma-plugins-all.zip` containing every plugin. `dist/` is
 ignored by git.
 
-`.github/workflows/release.yml` publishes releases when `main` is pushed:
+Releases are published from this machine with `just publish`
+(`scripts/publish.mjs`); there is no CI. It needs the
+[GitHub CLI](https://cli.github.com) installed and logged in (`gh auth login`).
 
-1. `scripts/ci-plan.mjs` marks a plugin as bumped when no git tag
-   `<id>-v<version>` exists. So releasing is: raise `version` in
-   `plugins/<id>/manifest.json`, push to `main`. Nothing happens when no
-   version is new.
-2. For plugins with a sidecar, `scripts/ci-sidecar.mjs` reuses the exe from the
-   plugin's latest release if nothing under `sidecar/` changed since that
-   release's tag; otherwise it compiles it (MSYS2 gcc, `setup.mjs`,
-   `cargo build --release`, Rust build cached).
-3. `just package` builds and zips every plugin.
-4. `scripts/ci-publish.mjs` creates one release per bumped plugin (tag
-   `<id>-v<version>`, asset `<id>-<version>.zip`, notes from the commits that
-   touched that plugin) and recreates the rolling `latest` release holding
-   `mma-plugins-all.zip` with every plugin at its current version.
+To release a plugin:
 
-The first run on a repository with no tags releases every plugin. Run
-`node scripts/ci-plan.mjs` locally to see what a push would release. The
-workflow can also be started by hand (`workflow_dispatch`).
+1. Raise `version` in `plugins/<id>/manifest.json` (and the sidecar version in
+   the manifest and `Cargo.toml` if the helper changed).
+2. Add a `## <version>` entry to `plugins/<id>/CHANGES.md`, newest first. Its
+   text becomes the release notes.
+3. Build the sidecar if the plugin has one (`cargo build --release`).
+4. Commit, push to `main`, then run `just publish`.
+
+`just publish` treats a plugin as new when no git tag `<id>-v<version>` exists.
+It first checks that you are on `main` with a clean, fully pushed tree, that `gh`
+is logged in, that every new version has a `CHANGES.md` entry, and that each
+sidecar exe is built and not older than its sources; any failure stops it before
+anything is built. After a confirmation prompt it runs `just package`, then:
+
+- creates one release per new version: tag `<id>-v<version>`, asset
+  `<id>-<version>.zip`, notes from the `CHANGES.md` entry (plus a source link for
+  GPL sidecars);
+- recreates the rolling `bundle` release holding `mma-plugins-all.zip` with
+  every plugin at its current version, marked as the repository's latest release.
+
+`just publish --dry-run` runs only the checks and shows what would be released;
+`--yes` skips the prompt. If a run stops part-way, fix the cause and run it
+again: plugins that already have their tag are skipped. The first run on a
+repository with no tags releases every plugin.
+
+The README's Download links open each plugin's releases filtered by its tag
+prefix (`releases?q=<id>-v`), newest first, so they never need updating.
 
 ## Sidecars
 
