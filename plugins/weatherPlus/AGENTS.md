@@ -11,12 +11,11 @@ sidecar/             Rust crate, GPL-2.0-only
   src/http.rs          OmFileReaderBackend over HTTP range requests
   setup.mjs            one-time toolchain setup (writes .cargo/config.toml; vendor/ and .cargo/ are gitignored)
   LICENSE              GPL-2.0 text
-index.js, procedure.js   built output (committed); do not edit
 ```
 
 - Only `cloudCover` is supported; other variables and the Open-Meteo API provider were removed on purpose.
 - The provider id `weatherPlus` and field key `cloudCover` are what Moon visibility relies on.
-- `build/` includes the sidecar exe when it is compiled (warns otherwise); `release` and `deploy` need it.
+- `build/` includes the sidecar exe when it is compiled (warns otherwise); `just release` needs it.
 - Sidecar builds use the `x86_64-pc-windows-gnu` target (MSVC cannot compile the C library).
 - If the sidecar version in the manifest changes, change `sidecar/Cargo.toml` too.
 - The sidecar's values were validated against the Open-Meteo API (`models=era5`); re-validate after

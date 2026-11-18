@@ -2,7 +2,7 @@
 //
 //   node scaffold/release-plugin.mjs <plugin-directory>
 //
-// Run it after the plugin has been built (sync.mjs --release does both). release/ is build/ plus
+// Run it after the plugin has been built (`just release` does both). release/ is build/ plus
 // LICENSE (the plugin's own, else the sidecar's), README.md and CHANGES.md, recreated from scratch
 // each time.
 // Fails when build/ lacks something the manifest promises, e.g. an unbuilt sidecar exe.

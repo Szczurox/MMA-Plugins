@@ -2,9 +2,9 @@
 // (index.js, the procedure module, manifest.json, sidecar binary) to the appdata plugin
 // directory.
 //
-// Usage:
-//   node plugins/dev.mjs plugins/vision              # JS watch + sync
-//   node plugins/dev.mjs plugins/vision --sidecar     # also watch sidecar binary
+// Usage (normally `just dev [plugin...]`, or `npm run dev` inside a plugin):
+//   node scaffold/dev.mjs plugins/<id>              # JS watch + sync
+//   node scaffold/dev.mjs plugins/<id> --sidecar     # also watch sidecar binary
 //
 // The sidecar binary is expected at plugins/<id>/sidecar/target/debug/<name>.exe
 // (or without .exe on unix). Build it yourself with `cargo build` in the sidecar
@@ -39,7 +39,7 @@ const watchSidecar = args.includes("--sidecar");
 const dirs = args.filter((a) => !a.startsWith("--"));
 
 if (dirs.length !== 1) {
-	console.error("Usage: node plugins/dev.mjs plugins/<id> [--sidecar]");
+	console.error("Usage: node scaffold/dev.mjs plugins/<id> [--sidecar]");
 	process.exit(1);
 }
 

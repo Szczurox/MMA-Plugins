@@ -8,7 +8,15 @@
 // dist/mma-plugins-all.zip, holding every plugin's folder.
 
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import {
+	cpSync,
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	readdirSync,
+	rmSync,
+	statSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,21 +32,18 @@ export function zip(out, cwd, entries) {
 	const absOut = resolve(out);
 	const r =
 		process.platform === "linux"
-			? spawnSync("zip", ["-r", "-q", absOut, ...entries], { cwd, stdio: "inherit" })
+			? spawnSync("zip", ["-r", "-q", absOut, ...entries], {
+					cwd,
+					stdio: "inherit",
+				})
 			: spawnSync(
-					process.platform === "win32" ? join(process.env.SystemRoot, "System32", "tar.exe") : "tar",
+					process.platform === "win32"
+						? join(process.env.SystemRoot, "System32", "tar.exe")
+						: "tar",
 					["-a", "-c", "-f", absOut, "-C", cwd, ...entries],
 					{ stdio: "inherit" },
 				);
 	if (r.status !== 0) throw new Error(`could not create ${out}`);
-}
-
-/** Extract one member of a zip into dir. */
-export function unzipMember(zipFile, dir, member) {
-	mkdirSync(dir, { recursive: true });
-	const tar = process.platform === "win32" ? join(process.env.SystemRoot, "System32", "tar.exe") : "tar";
-	const r = spawnSync(tar, ["-x", "-f", resolve(zipFile), "-C", dir, member], { stdio: "inherit" });
-	if (r.status !== 0) throw new Error(`could not extract ${member} from ${zipFile}`);
 }
 
 function main() {
@@ -49,12 +54,20 @@ function main() {
 	}
 
 	const plugins = readdirSync(pluginsRoot)
-		.filter((name) => existsSync(join(pluginsRoot, name, "manifest.json")) && statSync(join(pluginsRoot, name)).isDirectory())
+		.filter(
+			(name) =>
+				existsSync(join(pluginsRoot, name, "manifest.json")) &&
+				statSync(join(pluginsRoot, name)).isDirectory(),
+		)
 		.filter((name) => only.length === 0 || only.includes(name))
 		.sort();
 	const unknown = only.filter((n) => !plugins.includes(n));
 	if (unknown.length > 0 || plugins.length === 0) {
-		console.error(unknown.length > 0 ? `Unknown plugin(s): ${unknown.join(", ")}` : "No plugins found");
+		console.error(
+			unknown.length > 0
+				? `Unknown plugin(s): ${unknown.join(", ")}`
+				: "No plugins found",
+		);
 		process.exit(1);
 	}
 
@@ -65,7 +78,9 @@ function main() {
 		const release = join(pluginsRoot, name, "release");
 		const manifestPath = join(release, "manifest.json");
 		if (!existsSync(manifestPath)) {
-			console.error(`plugins/${name}/release is missing; run "just release ${name}" first`);
+			console.error(
+				`plugins/${name}/release is missing; run "just release ${name}" first`,
+			);
 			process.exit(1);
 		}
 		const { id, version } = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -82,4 +97,8 @@ function main() {
 	rmSync(stage, { recursive: true, force: true });
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) main();
+if (
+	process.argv[1] &&
+	resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
+)
+	main();
