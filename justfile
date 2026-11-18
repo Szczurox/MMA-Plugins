@@ -16,6 +16,10 @@ test *plugins:
 release *plugins:
     node scripts/plugins.mjs release {{plugins}}
 
+# Build releases and zip them into dist/ (plus the all-plugins bundle when no names are given).
+package *plugins: (release plugins)
+    node scripts/package.mjs {{plugins}}
+
 # Create plugins/<name> from a template in templates/ (asks which one when omitted).
 new name template="":
     node scripts/new-plugin.mjs {{name}} {{template}}

@@ -23,6 +23,7 @@ just sync [plugin...]        # build and install into %APPDATA%\app.map-making.l
 just dev [plugin...]         # watch and sync on every change until Ctrl+C
 just test [plugin...]        # run plugin tests
 just release [plugin...]     # build and assemble <plugin>/release/
+just package [plugin...]     # release, then zip into dist/ (plus the all-plugins bundle when no names)
 just new <name> [template]   # create plugins/<name> from templates/ (basic, procedure, sidecar)
 ```
 
