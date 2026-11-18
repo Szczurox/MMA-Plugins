@@ -9,6 +9,7 @@ Plugins for [Map Making App](https://github.com/ccmdi/mma).
 | **[Moon](plugins/moon/)**            | Moon position, phase and visibility | [Download](https://github.com/Szczurox/Geoguessr/releases?q=moon-v&expanded=true)        |
 | **[Pointer](plugins/pointer/)**      | Pan Street View to a target         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=pointer-v&expanded=true)     |
 | **[Weather+](plugins/weatherPlus/)** | Historical cloud cover (ERA5)       | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true) |
+|                                      |                                     |                                                                                          |
 | **Bundle**                           | **All plugins in one zip**          | **[Download](https://github.com/Szczurox/Geoguessr/releases/tag/bundle)**                |
 
 Each plugin has its own `README.md`; Download opens its releases, newest first.
@@ -24,7 +25,7 @@ just sync [plugin...]        # build and install into %APPDATA%\app.map-making.l
 just dev [plugin...]         # watch and sync on every change until Ctrl+C
 just test [plugin...]        # run plugin tests
 just release [plugin...]     # build and assemble <plugin>/release/
-just package [plugin...]     # release, then zip into dist/ (plus the all-plugins bundle when no names)
+just package [plugin...]     # release, then zip into dist/
 just publish [--dry-run]     # GitHub releases for plugins whose version has no tag yet
 just new <name> [template]   # create plugins/<name> from templates/ (basic, procedure, sidecar)
 ```
