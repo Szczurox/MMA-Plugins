@@ -3,7 +3,6 @@
 ```text
 manifest.json    id pointer, minAppVersion 0.10.8, no procedure
 src/index.tsx    everything: TARGETS, availableTargets, button cloning, sync loop, sidebar + Status
-index.js         built output (committed); do not edit
 ```
 
 - `TARGETS`: `road` (`loc.heading`, pitch 0) and `moon` (`extra.moonAzimuth` / `extra.moonAltitude`).

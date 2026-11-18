@@ -21,7 +21,7 @@ are dropdown filters; all fields are toggles in the Enrichment tab.
 ```powershell
 npm install
 npm test           # builds, then runs test/procedure.test.mjs
-npm run build      # src/ -> index.js, procedure.js
+npm run build      # src/ -> build/ (index.js, procedure.js)
 npm run dev        # watch and sync to %APPDATA%\app.map-making.local\plugins\moon
 npm run release    # assemble the full release in release/
 ```

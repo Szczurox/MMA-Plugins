@@ -24,12 +24,12 @@ the two misses were near Port Phillip Bay, where the API also weighs the point's
 ```powershell
 npm install
 npm test          # builds, then runs test/procedure.test.mjs (mocked host)
-npm run build     # src/ -> index.js, procedure.js
-npm run deploy    # build and copy the plugin and sidecar to %APPDATA%\app.map-making.local\plugins\weatherPlus
+npm run build     # src/ -> build/ (index.js, procedure.js, sidecar exe once it is built)
+npm run dev       # watch and sync to %APPDATA%\app.map-making.local\plugins\weatherPlus
 npm run release   # assemble the full release in release/
 ```
 
-The sidecar must be built once before `deploy` or `release`. It needs Rust, MSYS2 gcc on PATH
+The sidecar must be built once before `build` can include it, and before `release`. It needs Rust, MSYS2 gcc on PATH
 (`C:\msys64\mingw64\bin`), git and Python:
 
 ```powershell
