@@ -52,4 +52,6 @@ Never change it casually.
 Rust helper). Inside copied files and file names `__ID__`, `__TITLE__` and
 `__SLUG__` are replaced with the plugin id, display name and kebab-case id.
 A template's `template.json` holds the description shown in the menu and is
-not copied.
+not copied. Each template ships an `AGENTS.md` (plus a `CLAUDE.md` that imports
+it) describing the template's purpose and file structure; it is copied into
+the new plugin as its own contributor guide, with TODOs to replace.
