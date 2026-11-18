@@ -1,0 +1,9 @@
+{
+  "id": "__ID__",
+  "name": "__TITLE__",
+  "description": "TODO: one line describing what this plugin does",
+  "icon": "M3,3H21V21H3V3Z",
+  "version": "0.1.0",
+  "main": "index.js",
+  "minAppVersion": "0.10.8"
+}

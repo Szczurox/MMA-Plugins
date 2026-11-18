@@ -1,41 +1,36 @@
-# Geoguessr
+# MMA plugins
 
-A set of various tools, JSONs and whatnot
+Plugins for [Map Making App](https://github.com/ccmdi/mma).
 
-## tools:
+## Plugins
 
-### MMA plugins
+| Plugin       | Purpose                                                          | Source                                         |
+| ------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
+| **Moon**     | Moon direction, altitude, phase and visibility for each location | [`plugins/moon/`](plugins/moon/)               |
+| **Pointer**  | Street View controls for pointing at (panning to) things         | [`plugins/pointer/`](plugins/pointer/)         |
+| **Weather+** | Historical ERA5 cloud cover at a location's capture time         | [`plugins/weatherPlus/`](plugins/weatherPlus/) |
 
-Plugins for [Map Making App](https://github.com/ccmdi/mma). Expand one for its folders.
+Each plugin contains its own `README.md` that goes into more detail.
 
-<details>
-<summary><b>Moon</b> – moon direction, altitude, phase and visibility for each location</summary>
+## Development
 
-- [Install folder](tools/mma-plugins/moon)
-- [Source](tools/dev/mma-plugins/moon)
+Tasks run from the repository root with [just](https://github.com/casey/just)
+and Node.js. A plugin's dependencies install automatically the first time a
+recipe touches it.
 
-</details>
+```powershell
+just sync [plugin...]        # build and install into %APPDATA%\app.map-making.local\plugins\<id>
+just dev [plugin...]         # watch and sync on every change until Ctrl+C
+just test [plugin...]        # run plugin tests
+just release [plugin...]     # build and assemble <plugin>/release/
+just new <name> [template]   # create plugins/<name> from templates/ (basic, procedure, sidecar)
+```
 
-<details>
-<summary><b>Pointer</b> – a button in the Street View viewer that points the camera at the road or the moon</summary>
+Plugin names are optional; without them a recipe covers every plugin, so
+`just sync moon pointer` syncs only those two. Reload MMA after a sync, and
+close it first if a plugin's sidecar executable is in use.
 
-- [Install folder](tools/mma-plugins/pointer)
-- [Source](tools/dev/mma-plugins/pointer)
-
-</details>
-
-<details>
-<summary><b>Weather+</b> – historical cloud cover at each location's capture time, fast enough for 250k locations</summary>
-
-- [Install folder](tools/mma-plugins/weatherPlus)
-- [Source](tools/dev/mma-plugins/weatherPlus)
-
-</details>
-
-Install folders are ready to copy into `%APPDATA%\app.map-making.local\plugins\`; see
-[tools/mma-plugins](tools/mma-plugins). Development setup is in
-[tools/dev/mma-plugins](tools/dev/mma-plugins).
-
-## docs:
-
-Solving Australia [WIP]: https://docs.google.com/document/d/1ZvG8saLYJy1uxD8b3dxRqnHZr5cNsasZVO3Gt9kcQnk
+A single plugin can also be driven from its own folder with `npm run build`,
+`npm test` or `npm run dev`. `build/` is the installable payload and `release/`
+adds the README and LICENSE for distribution; both are generated and ignored
+by git. See [docs/](docs/) for the architecture and build flow.

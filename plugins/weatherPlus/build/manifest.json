@@ -1,0 +1,15 @@
+{
+  "id": "weatherPlus",
+  "name": "Weather+",
+  "description": "Historical cloud cover at the exact capture time, read in bulk from the public ERA5 archive",
+  "icon": "M6.76,4.84L4.96,3.05L3.55,4.46L5.34,6.25L6.76,4.84M1,13H4V11H1V13M11,1H13V4H11V1M18.66,6.25L20.45,4.46L19.04,3.05L17.25,4.84L18.66,6.25M20,11V13H23V11H20M12,6A6,6 0 0,0 6,12C6,14.22 7.21,16.16 9,17.2V19A1,1 0 0,0 10,20H14A1,1 0 0,0 15,19V17.2C16.79,16.16 18,14.22 18,12A6,6 0 0,0 12,6M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21Z",
+  "version": "0.2.23",
+  "main": "index.js",
+  "procedure": "procedure.js",
+  "minAppVersion": "0.10.2",
+  "sidecar": {
+    "name": "mma-weather-plus",
+    "version": "0.1.0",
+    "serve": []
+  }
+}

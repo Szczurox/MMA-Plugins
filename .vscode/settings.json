@@ -1,0 +1,12 @@
+{
+	"json.validate.enable": false,
+	"BC-MC.Diagnostics.Json": false,
+	"json.schemas": [
+		{
+			"fileMatch": [
+				"/plugins/**/manifest.json"
+			],
+			"url": "./.vscode/mma-plugin-manifest.schema.json"
+		}
+	]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "mma-plugin-__SLUG__",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../../scaffold/build-plugin.mjs .",
+    "dev": "node ../../scaffold/dev.mjs .",
+    "release": "npm run build && node ../../scaffold/release-plugin.mjs ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "mma-plugin-types": "file:../../scaffold/types"
+  }
+}

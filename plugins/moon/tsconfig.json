@@ -1,0 +1,13 @@
+{
+	"extends": "../../scaffold/types/tsconfig.base.json",
+	"compilerOptions": {
+		"strict": true,
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"jsx": "react-jsx",
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"include": ["src", "../../scaffold/types/mma.d.ts"]
+}
