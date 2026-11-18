@@ -1,0 +1,16 @@
+{
+  "name": "mma-plugin-weather-plus",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../scaffold/build-plugin.mjs .",
+    "dev": "node ../scaffold/dev.mjs .",
+    "test": "npm run build && node --test \"test/*.test.mjs\"",
+    "deploy": "npm run build && node ship.mjs --install",
+    "package": "npm run build && node ../scaffold/package-plugin.mjs . ../../../mma-plugins && node ship.mjs --release ../../../mma-plugins"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "mma-plugin-types": "file:../scaffold/types"
+  }
+}

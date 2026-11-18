@@ -1,0 +1,24 @@
+[package]
+name = "mma-weather-plus"
+version = "0.1.0"
+edition = "2024"
+description = "Bulk ERA5 cloud cover lookup for the Weather+ MMA plugin, read straight from Open-Meteo's public archive"
+# omfiles and the om file format C library are GPL-2.0-only; this binary links them.
+license = "GPL-2.0-only"
+
+[dependencies]
+omfiles = { git = "https://github.com/open-meteo/rust-omfiles" }
+ndarray = "0.17"
+rayon = "1"
+ureq = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+opt-level = 3
+
+# om-file-format-sys finds its C sources through a git symlink, which Windows checks out as a
+# plain text file. setup.mjs copies the sources into vendor/ as real files.
+[patch."https://github.com/open-meteo/om-file-format"]
+om-file-format-sys = { path = "vendor/om-file-format/rust/om-file-format-sys" }

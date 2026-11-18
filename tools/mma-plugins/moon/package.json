@@ -1,0 +1,19 @@
+{
+  "name": "mma-plugin-moon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../scaffold/build-plugin.mjs .",
+    "dev": "node ../scaffold/dev.mjs .",
+    "package": "npm run build && node ../scaffold/package-plugin.mjs . ../../../mma-plugins",
+    "test": "npm run build && node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@types/suncalc": "^1.8.0",
+    "esbuild": "^0.25.0",
+    "mma-plugin-types": "file:../scaffold/types"
+  },
+  "dependencies": {
+    "suncalc": "^1.9.0"
+  }
+}

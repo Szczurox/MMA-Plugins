@@ -1,0 +1,9706 @@
+# MMA API reference
+
+Every member of the global `MMA` object (also `window.MMA`), grouped by the file that declares it.
+
+- `stable` members keep working across releases. A rename or removal ships with a shim.
+- `unstable` members are documented but can change or disappear in any release.
+- `since` is the first release a member shipped in: the `minAppVersion` a plugin using it needs.
+
+## Contents
+
+**Stable surfaces**
+
+- [Account](#account)
+- [Autosave](#autosave)
+- [Bindings consts](#bindings-consts)
+- [Commit](#commit)
+- [Edit](#edit)
+- [Editor](#editor)
+- [Field](#field)
+- [Field def registry](#field-def-registry)
+- [Field defs](#field-defs)
+- [History](#history)
+- [Legacy](#legacy)
+- [Location](#location)
+- [Maps](#maps)
+- [Mutation](#mutation)
+- [Plugin storage](#plugin-storage)
+- [Procedure](#procedure)
+- [Provider](#provider)
+- [Query](#query)
+- [Registry](#registry)
+- [Scope](#scope)
+- [Sidecar](#sidecar)
+- [Store](#store)
+- [Tag](#tag)
+- [Tags](#tags)
+- [Toast](#toast)
+- [Types](#types)
+- [Ui](#ui)
+- [Use job](#use-job)
+
+**Unstable surfaces**
+
+- [Color](#color)
+- [Commands](#commands)
+- [Commit diff](#commit-diff)
+- [Download](#download)
+- [Import](#import)
+- [Jobs](#jobs)
+- [Layer](#layer)
+- [Map host](#map-host)
+- [Pano](#pano)
+- [Providers](#providers)
+- [Review](#review)
+- [Saved selection](#saved-selection)
+- [Scene](#scene)
+- [Seen](#seen)
+- [Selection list](#selection-list)
+- [Selections](#selections)
+- [Selector pick](#selector-pick)
+- [Settings](#settings)
+- [Street view](#street-view)
+- [Tauri](#tauri)
+- [Test api](#test-api)
+- [Util](#util)
+- [Validation categories](#validation-categories)
+
+## Account
+
+### Account
+
+`stable` · since v0.13.0
+
+The GitHub account the user is signed in with, and signing in or out of it.
+
+#### Account.me
+
+`stable` · since v0.13.0
+
+```ts
+Account.me(): Promise<GhUser | null>
+```
+
+The signed-in GitHub account, or null when signed out or unreachable.
+
+#### Account.signIn
+
+`stable` · since v0.13.0
+
+```ts
+Account.signIn(onCode: (code: DeviceCodeInfo) => void): Promise<GhUser>
+```
+
+Sign in with GitHub: `onCode` receives the code the user enters in the browser page this opens, which is also copied to the clipboard.
+
+#### Account.signOut
+
+`stable` · since v0.13.0
+
+```ts
+Account.signOut(): Promise<void>
+```
+
+Sign out of GitHub and forget the stored session.
+
+#### Account.use
+
+`stable` · since v0.13.0
+
+```ts
+Account.use(): GhUser | null | undefined
+```
+
+React hook: the signed-in GitHub account, null when signed out, and undefined until first known.
+
+## Autosave
+
+### Autosave
+
+`stable` · since v0.12.0
+
+Debounced persistence of the open map: schedule, hold, cancel, or flush it.
+
+#### Autosave.cancel
+
+`unstable` · since v0.12.0
+
+```ts
+Autosave.cancel(): void
+```
+
+Cancel any pending autosave timer.
+
+#### Autosave.exclusive
+
+`unstable` · since v0.12.0
+
+```ts
+Autosave.exclusive<T>(write: () => Promise<T>): Promise<T>
+```
+
+Run `write` once every save started so far has finished, and hold later saves until it does.
+Writes to the map's files that must not interleave with a save go through here.
+
+#### Autosave.flush
+
+`unstable` · since v0.12.0
+
+```ts
+Autosave.flush(): Promise<void>
+```
+
+Save any unsaved changes now instead of waiting for the timer.
+
+#### Autosave.paused
+
+`unstable` · since v0.13.0
+
+```ts
+Autosave.paused: { hold: () => () => void; held: () => boolean }
+```
+
+What defers autosave while held. Useful for batches that land many mutations.
+
+#### Autosave.schedule
+
+`unstable` · since v0.12.0
+
+```ts
+Autosave.schedule(): void
+```
+
+Schedule a debounced autosave. Mutations call this automatically.
+
+#### Autosave.waitForInflight
+
+`unstable` · since v0.12.0
+
+```ts
+Autosave.waitForInflight(): Promise<void>
+```
+
+Wait until every save and background commit started so far has finished.
+
+## Bindings consts
+
+### BUILTIN_FIELDS
+
+`stable` · since v0.10.3
+
+```ts
+BUILTIN_FIELDS: {
+  id: {
+    readonly type: "number";
+    readonly label: "ID";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "identity";
+    readonly clearable: false;
+  };
+  lat: {
+    readonly type: "number";
+    readonly label: "Latitude";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "identity";
+    readonly clearable: false;
+  };
+  lng: {
+    readonly type: "number";
+    readonly label: "Longitude";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "identity";
+    readonly clearable: false;
+  };
+  heading: {
+    readonly type: "number";
+    readonly label: "Heading";
+    readonly values: null;
+    readonly comparison: { readonly type: "circular"; readonly period: 360 };
+    readonly interned: false;
+    readonly kind: "writable";
+    readonly clearable: false;
+  };
+  pitch: {
+    readonly type: "number";
+    readonly label: "Pitch";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "writable";
+    readonly clearable: false;
+  };
+  zoom: {
+    readonly type: "number";
+    readonly label: "Zoom";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "writable";
+    readonly clearable: false;
+  };
+  panoId: {
+    readonly type: "string";
+    readonly label: "Pano ID";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: null;
+    readonly clearable: true;
+  };
+  tags: {
+    readonly type: "array";
+    readonly label: "Tags";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: true;
+    readonly kind: "writable";
+    readonly clearable: false;
+  };
+  createdAt: {
+    readonly type: "date";
+    readonly label: "Created";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: null;
+    readonly clearable: false;
+  };
+  modifiedAt: {
+    readonly type: "date";
+    readonly label: "Modified";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: null;
+    readonly clearable: false;
+  };
+  tagCount: {
+    readonly type: "number";
+    readonly label: "Tag count";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "virtual";
+    readonly clearable: false;
+  };
+  loadAsPanoId: {
+    readonly type: "boolean";
+    readonly label: "Load as pano ID";
+    readonly values: null;
+    readonly comparison: null;
+    readonly interned: false;
+    readonly kind: "writable";
+    readonly clearable: false;
+  };
+}
+```
+
+### CameraType
+
+`stable` · since v0.11.0
+
+```ts
+CameraType: {
+  /** First-generation Street View camera. */
+  Gen1: "gen1";
+  /** Second- or third-generation camera. */
+  Gen2: "gen2";
+  /** Fourth-generation camera. */
+  Gen4: "gen4";
+  /** A capture from a known bad camera. */
+  Badcam: "badcam";
+  /** An indoor capture from a tripod. */
+  Tripod: "tripod";
+  /** A special collect carried on foot or on another vehicle, such as a trekker. */
+  Trekker: "trekker";
+}
+```
+
+### CapturePick
+
+`stable` · since v0.11.0
+
+```ts
+CapturePick: { readonly Newest: "newest"; readonly Oldest: "oldest" }
+```
+
+A capture of a pano's timeline to settle on.
+
+### DatePart
+
+`stable` · since v0.11.0
+
+```ts
+DatePart: {
+  /** The calendar year. */
+  Year: "year";
+  /** The year and month. */
+  YearMonth: "yearMonth";
+  /** The calendar date. */
+  Day: "day";
+  /** The month, the same in every year. */
+  MonthOfYear: "monthOfYear";
+  /** The hour of the day. */
+  HourOfDay: "hourOfDay";
+}
+```
+
+A calendar component to group dates by.
+
+### DEFAULT_DUPLICATE_SCORE
+
+`unstable` · since v0.10.3
+
+```ts
+DEFAULT_DUPLICATE_SCORE: "tagCount + has(panoId) + loadAsPanoId + (heading != 0)"
+```
+
+### DEFAULT_MARKER_COLOR
+
+`stable` · since v0.12.0
+
+```ts
+DEFAULT_MARKER_COLOR: readonly [42, 42, 42]
+```
+
+### ERROR_CODES
+
+`unstable` · since v0.10.7
+
+```ts
+ERROR_CODES: readonly [
+  "auth",
+  "attachment-not-staged",
+  "attachment-too-large",
+  "attachment-not-image",
+  "upload-rejected",
+  "report-rejected",
+  "report-unreadable",
+  "reply-rejected",
+  "sign-in-timed-out",
+  "sign-in-token-rejected",
+  "issue-rejected",
+  "geoguessr-polygonal",
+  "geoguessr-draft-too-large",
+  "data-folder-unavailable",
+  "database-unreadable",
+  "database-newer",
+  "migration-failed",
+  "map-missing",
+  "map-unreadable",
+]
+```
+
+### FieldType
+
+`stable` · since v0.11.1
+
+```ts
+FieldType: {
+  /** Text. */
+  String: "string";
+  /** A number. */
+  Number: "number";
+  /** True or false. */
+  Boolean: "boolean";
+  /** A point in time. */
+  Date: "date";
+  /** A year and month. */
+  Month: "month";
+  /** One of a fixed set of values. */
+  Enum: "enum";
+  /** A list of values. */
+  Array: "array";
+}
+```
+
+Type discriminant for `Location.extra` field definitions.
+Determines how the field is displayed and filtered in the UI.
+
+### FirstSyncMode
+
+`unstable` · since v0.11.0
+
+```ts
+FirstSyncMode: {
+  readonly Merge: "merge";
+  readonly MirrorFromRemote: "mirrorFromRemote";
+  readonly MirrorFromLocal: "mirrorFromLocal";
+}
+```
+
+First-sync seeding when both sides already have pins. Only meaningful on the first sync
+(empty mapping); afterwards it's plain three-way. `Merge` never deletes.
+
+### Group
+
+`stable` · since v0.12.0
+
+```ts
+Group: {
+  readonly Union: "Union";
+  readonly Intersection: "Intersection";
+}
+```
+
+How a group of selections joins its members.
+
+### IssueState
+
+`unstable` · since v0.11.0
+
+```ts
+IssueState: { readonly Open: "open"; readonly Closed: "closed" }
+```
+
+### KNOWN_FIELDS
+
+`stable` · since v0.10.3
+
+```ts
+KNOWN_FIELDS: readonly [
+  {
+    readonly key: "altitude";
+    readonly type: "number";
+    readonly label: "Altitude";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: false;
+  },
+  {
+    readonly key: "countryCode";
+    readonly type: "string";
+    readonly label: "Country code";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: false;
+  },
+  {
+    readonly key: "cameraType";
+    readonly type: "enum";
+    readonly label: "Camera type";
+    readonly values: readonly ["gen1", "gen2", "gen4", "badcam", "tripod", "trekker"];
+    readonly labels: readonly [
+      readonly ["gen1", "Gen 1"],
+      readonly ["gen2", "Gen 2/3"],
+      readonly ["gen4", "Gen 4"],
+      readonly ["badcam", "Bad cam"],
+      readonly ["tripod", "Tripod"],
+      readonly ["trekker", "Trekker"],
+    ];
+    readonly circularPeriod: null;
+    readonly defaultOff: false;
+  },
+  {
+    readonly key: "panoType";
+    readonly type: "enum";
+    readonly label: "Pano type";
+    readonly values: readonly ["2", "3", "10"];
+    readonly labels: readonly [
+      readonly ["2", "Official"],
+      readonly ["3", "Unknown"],
+      readonly ["10", "User uploaded"],
+    ];
+    readonly circularPeriod: null;
+    readonly defaultOff: false;
+  },
+  {
+    readonly key: "imageDate";
+    readonly type: "month";
+    readonly label: "Image date";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: false;
+  },
+  {
+    readonly key: "datetime";
+    readonly type: "date";
+    readonly label: "Exact date";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: true;
+  },
+  {
+    readonly key: "timezone";
+    readonly type: "enum";
+    readonly label: "Timezone";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: true;
+  },
+  {
+    readonly key: "drivingDirection";
+    readonly type: "number";
+    readonly label: "Driving direction";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: 360;
+    readonly defaultOff: true;
+  },
+  {
+    readonly key: "uploaderName";
+    readonly type: "string";
+    readonly label: "Uploader";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: true;
+  },
+  {
+    readonly key: "coverageDates";
+    readonly type: "array";
+    readonly label: "Coverage dates";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: true;
+  },
+  {
+    readonly key: "subdivision";
+    readonly type: "string";
+    readonly label: "Subdivision";
+    readonly values: readonly [];
+    readonly labels: readonly [];
+    readonly circularPeriod: null;
+    readonly defaultOff: true;
+  },
+]
+```
+
+### LocationFlag
+
+`stable` · since v0.11.0
+
+```ts
+LocationFlag: {
+  readonly None: 0;
+  readonly LoadAsPanoId: 1;
+  readonly Informational: 2;
+}
+```
+
+Per-location bitfield, sent and stored as a plain `u32`.
+
+### MapShape
+
+`stable` · since v0.11.3
+
+```ts
+MapShape: {
+  readonly GeoGuessr: "geoguessr";
+  readonly MapMaking: "mapMaking";
+  readonly Local: "local";
+}
+```
+
+How much of a map a destination keeps. Each shape keeps everything the one before it does.
+
+### MergeWinner
+
+`stable` · since v0.11.0
+
+```ts
+MergeWinner: { readonly From: "from"; readonly To: "to" }
+```
+
+When a move target already holds a value, which side survives.
+
+### OFFICIAL_ID_PATTERN
+
+`stable` · since v0.10.7
+
+```ts
+OFFICIAL_ID_PATTERN: "^[-_A-Za-z0-9]{21}[AQgw]$"
+```
+
+### PanoType
+
+`stable` · since v0.11.0
+
+```ts
+PanoType: {
+  readonly Official: 2;
+  readonly Unknown: 3;
+  readonly UserUploaded: 10;
+}
+```
+
+Which imagery collection a pano id belongs to.
+
+### Place
+
+`stable` · since v0.12.0
+
+```ts
+Place: { readonly Before: "before"; readonly After: "after" }
+```
+
+Where a moved selection lands beside its target.
+
+### PROJECTIONS
+
+`unstable` · since v0.10.3
+
+```ts
+PROJECTIONS: readonly [
+  {
+    readonly id: "value";
+    readonly appliesTo: readonly [
+      "string",
+      "enum",
+      "boolean",
+      "number",
+      "month",
+      "array",
+    ];
+    readonly needsTz: false;
+  },
+  { readonly id: "day"; readonly appliesTo: readonly ["date"]; readonly needsTz: true },
+  {
+    readonly id: "yearMonth";
+    readonly appliesTo: readonly ["date"];
+    readonly needsTz: true;
+  },
+  {
+    readonly id: "year";
+    readonly appliesTo: readonly ["date", "month"];
+    readonly needsTz: true;
+  },
+  {
+    readonly id: "monthOfYear";
+    readonly appliesTo: readonly ["date", "month"];
+    readonly needsTz: true;
+  },
+  {
+    readonly id: "hourOfDay";
+    readonly appliesTo: readonly ["date"];
+    readonly needsTz: true;
+  },
+]
+```
+
+### RankingStrategy
+
+`stable` · since v0.11.0
+
+```ts
+RankingStrategy: { readonly Best: 1; readonly Closest: 2 }
+```
+
+Which pano the search picks; omitted means closest. BEST at a small radius can return a
+neighbouring pano from the same capture run, so probe a pano's own coordinate with CLOSEST.
+
+### RateCost
+
+`stable` · since v0.11.0
+
+```ts
+RateCost: { readonly Request: "request"; readonly Row: "row" }
+```
+
+What one attempt charges the bucket: the call itself, or one per row in its batch
+(for APIs that bill multi-row requests per row).
+
+### ResolutionSide
+
+`unstable` · since v0.11.0
+
+```ts
+ResolutionSide: { readonly Local: "local"; readonly Remote: "remote" }
+```
+
+Which side won a resolved conflict.
+
+### ReviewMode
+
+`stable` · since v0.12.0
+
+```ts
+ReviewMode: {
+  readonly Reviewed: "reviewed";
+  readonly Unreviewed: "unreviewed";
+}
+```
+
+Which locations of a review session a selection holds.
+
+### SCRATCH_MAP_ID
+
+`unstable` · since v0.10.3
+
+```ts
+SCRATCH_MAP_ID: "scratch"
+```
+
+### Sink
+
+`stable` · since v0.11.0
+
+```ts
+Sink: { readonly Patch: "patch"; readonly Collect: "collect" }
+```
+
+Where a provider's results go. `Patch` applies them to the locations they name;
+`Collect` delivers them to the caller and writes nothing. The declaration decides
+this, never the contents of a result.
+
+### Stack
+
+`stable` · since v0.12.0
+
+```ts
+Stack: { readonly Undo: "undo"; readonly Redo: "redo" }
+```
+
+Which edit history stack to step through.
+
+### SYNC_PROVIDERS
+
+`unstable` · since v0.11.4
+
+```ts
+SYNC_PROVIDERS: {
+  readonly file: { readonly direction: "pullOnly"; readonly shape: "local" };
+  readonly geoguessr: {
+    readonly direction: "bidirectional";
+    readonly shape: "geoguessr";
+  };
+  readonly "map-making.app": {
+    readonly direction: "bidirectional";
+    readonly shape: "mapMaking";
+  };
+}
+```
+
+Every sync provider: which way it carries changes, and what it keeps of a map.
+
+### SyncDirection
+
+`unstable` · since v0.11.4
+
+```ts
+SyncDirection: {
+  readonly Bidirectional: "bidirectional";
+  readonly PullOnly: "pullOnly";
+}
+```
+
+Which way a link carries changes.
+
+### SyncTrigger
+
+`unstable` · since v0.11.4
+
+```ts
+SyncTrigger: {
+  /** Sync now was pressed. */
+  Manual: "manual";
+  /** Live sync ran it, after an edit or on its schedule. */
+  Live: "live";
+  /** Linking the map ran its first sync. */
+  Link: "link";
+  /** Resolving held conflicts ran it. */
+  Resolve: "resolve";
+}
+```
+
+What started a sync pass.
+
+### Timeline
+
+`stable` · since v0.12.0
+
+```ts
+Timeline: { readonly Edits: "edits"; readonly Selections: "selections" }
+```
+
+Which edit history to step through. Each part of the map that undoes on its own has one.
+
+### VALI_COUNTRIES
+
+`unstable` · since v0.12.0
+
+```ts
+VALI_COUNTRIES: readonly [
+  "AE",
+  "AF",
+  "AL",
+  "AM",
+  "AR",
+  "AT",
+  "AU",
+  "AZ",
+  "BA",
+  "BD",
+  "BE",
+  "BG",
+  "BH",
+  "BN",
+  "BO",
+  "BR",
+  "BT",
+  "BW",
+  "BY",
+  "BZ",
+  "CA",
+  "CD",
+  "CH",
+  "CI",
+  "CL",
+  "CM",
+  "CN",
+  "CO",
+  "CR",
+  "CU",
+  "CZ",
+  "DE",
+  "DK",
+  "DO",
+  "DZ",
+  "EC",
+  "EE",
+  "EG",
+  "ER",
+  "ES",
+  "ET",
+  "FI",
+  "FO",
+  "FR",
+  "GB",
+  "GE",
+  "GL",
+  "GR",
+  "GT",
+  "HK",
+  "HN",
+  "HR",
+  "HT",
+  "HU",
+  "ID",
+  "IE",
+  "IL",
+  "IN",
+  "IQ",
+  "IR",
+  "IS",
+  "IT",
+  "JM",
+  "JO",
+  "JP",
+  "KE",
+  "KG",
+  "KH",
+  "KR",
+  "KW",
+  "KZ",
+  "LA",
+  "LB",
+  "LI",
+  "LK",
+  "LT",
+  "LU",
+  "LV",
+  "LY",
+  "MA",
+  "MC",
+  "MD",
+  "ME",
+  "MK",
+  "ML",
+  "MM",
+  "MN",
+  "MO",
+  "MT",
+  "MV",
+  "MX",
+  "MY",
+  "NG",
+  "NI",
+  "NL",
+  "NO",
+  "NP",
+  "NZ",
+  "OM",
+  "PA",
+  "PE",
+  "PH",
+  "PK",
+  "PL",
+  "PR",
+  "PT",
+  "PY",
+  "QA",
+  "RE",
+  "RO",
+  "RS",
+  "RU",
+  "RW",
+  "SA",
+  "SE",
+  "SG",
+  "SI",
+  "SK",
+  "SN",
+  "SO",
+  "SV",
+  "SY",
+  "TH",
+  "TJ",
+  "TM",
+  "TN",
+  "TR",
+  "TT",
+  "TW",
+  "UA",
+  "US",
+  "UY",
+  "UZ",
+  "VE",
+  "VN",
+  "XK",
+  "YE",
+  "ZA",
+  "ZW",
+  "CW",
+  "AD",
+  "AG",
+  "AI",
+  "AO",
+  "AQ",
+  "AS",
+  "AW",
+  "AX",
+  "BB",
+  "BF",
+  "BI",
+  "BJ",
+  "BL",
+  "BM",
+  "BQ",
+  "BS",
+  "BV",
+  "CC",
+  "CF",
+  "CG",
+  "CK",
+  "CV",
+  "CX",
+  "CY",
+  "DJ",
+  "DM",
+  "EH",
+  "FJ",
+  "FK",
+  "FM",
+  "GA",
+  "GD",
+  "GF",
+  "GG",
+  "GH",
+  "GI",
+  "GM",
+  "GN",
+  "GP",
+  "GQ",
+  "GS",
+  "GU",
+  "GW",
+  "GY",
+  "HM",
+  "IM",
+  "IO",
+  "JE",
+  "KI",
+  "KM",
+  "KN",
+  "KP",
+  "KY",
+  "LC",
+  "LR",
+  "LS",
+  "MF",
+  "MG",
+  "MH",
+  "MP",
+  "MQ",
+  "MR",
+  "MS",
+  "MU",
+  "MW",
+  "MZ",
+  "NA",
+  "NC",
+  "NE",
+  "NF",
+  "NR",
+  "NU",
+  "PF",
+  "PG",
+  "PM",
+  "PN",
+  "PS",
+  "PW",
+  "SB",
+  "SC",
+  "SD",
+  "SH",
+  "SJ",
+  "SL",
+  "SM",
+  "SR",
+  "SS",
+  "ST",
+  "SX",
+  "SZ",
+  "TC",
+  "TD",
+  "TF",
+  "TG",
+  "TK",
+  "TL",
+  "TO",
+  "TV",
+  "TZ",
+  "UG",
+  "UM",
+  "VA",
+  "VC",
+  "VG",
+  "VI",
+  "VU",
+  "WF",
+  "WS",
+  "YT",
+  "ZM",
+]
+```
+
+Country codes Vali has coverage data for.
+
+### ValidationFlag
+
+`stable` · since v0.11.4
+
+```ts
+ValidationFlag: {
+  /** No findings: the location's coverage checked out. */
+  None: 0;
+  /** Official coverage newer than the location's stored pano exists. */
+  Newer: 1;
+  /** The location is pinned to a pano other than the one its coordinates load. */
+  OffDefault: 2;
+  /** The pano the location's coordinates load is not the newest capture there. */
+  DefaultStale: 4;
+  /** The location's pinned pano no longer loads, though coverage still exists at its coordinates. */
+  PanoIdBroke: 8;
+  /** The coverage the location shows is unofficial. */
+  Unofficial: 16;
+  /** The location shows bad-camera coverage, but its timeline holds a better camera capture. */
+  GoodcamAvailable: 32;
+  /** No coverage was found, neither the stored pano nor any within the search radius. */
+  NotFound: 64;
+}
+```
+
+One finding of a Street View coverage check. `validate` answers each row with the
+findings that apply, combined into one number.
+
+## Commit
+
+### Commit
+
+`stable` · since v0.12.0
+
+Save and restore map versions.
+
+#### Commit.background
+
+`unstable` · since v0.12.0
+
+```ts
+Commit.background(mapId: string, message: string): void
+```
+
+Commit `mapId` in the background once pending saves finish.
+
+#### Commit.checkout
+
+`unstable` · since v0.12.0
+
+```ts
+Commit.checkout(commitId: string): Promise<void>
+```
+
+Restore a previous commit as a new revert commit and refresh the view. Clears undo/redo.
+
+#### Commit.create
+
+`stable` · since v0.12.0
+
+```ts
+Commit.create(message?: string): Promise<string>
+```
+
+Commit all pending changes to the map's version history. Clears the undo stack.
+
+## Edit
+
+### Edit
+
+`stable` · since v0.12.0
+
+Edit map locations, metadata, value records, and selections.
+
+#### Edit.locations
+
+`unstable` · since v0.12.0
+
+```ts
+Edit.locations(
+  target: Target,
+  edits: Of<"locations">["edits"],
+  records?: Of<"locations">["records"],
+): Promise<EditResult>
+```
+
+Edit locations on a map or in a pending layer, with the rows themselves or the session
+they were uploaded to (see `storeUploadBegin`). Rows refer to interned values such as tags
+by their ids in `records`, matched to the map's by name. Map changes are undoable in that
+map.
+
+#### Edit.meta
+
+`stable` · since v0.12.0
+
+```ts
+Edit.meta(
+  patch: Omit<Parameters<typeof cmd.storeUpdateMapMeta>[0], "id"> & {
+    id?: string;
+  },
+): Promise<void>
+```
+
+Patch a map's metadata and persist it: the open map's unless the patch names an `id`.
+Settings merge key by key, so send only the keys that change.
+
+#### Edit.selections
+
+`unstable` · since v0.13.0
+
+```ts
+Edit.selections(op: Of<"selections">): Promise<Mutation<ListedSelection>>
+```
+
+Edit the selection list. Wrap an op in `{ kind: "active", op }` to affect only active
+selections.
+
+#### Edit.values
+
+`stable` · since v0.12.0
+
+```ts
+Edit.values(
+  field: string,
+  edits: Of<"values">["edits"],
+): Promise<Mutation<ValueRecord>>
+```
+
+Edit an interned field's value records in one undoable step.
+
+#### Edit.work
+
+`unstable` · since v0.12.0
+
+```ts
+Edit.work(
+  selector: Selector,
+  op: Work,
+  target?: Target,
+): Promise<WorkResult>
+```
+
+Run `op` across every location `selector` matches on a map or in a pending layer. Map
+changes are one undoable step.
+
+## Editor
+
+### Editor
+
+`stable` · since v0.12.0
+
+Open locations and change the editor pane.
+
+#### Editor.close
+
+`stable` · since v0.12.0
+
+```ts
+Editor.close(): void
+```
+
+Close the open location and return to the pane it was opened from.
+
+#### Editor.closeDuplicates
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.closeDuplicates(): void
+```
+
+Close the duplicate-resolution panel and return to the overview.
+
+#### Editor.closePlugin
+
+`stable` · since v0.12.0
+
+```ts
+Editor.closePlugin(): void
+```
+
+Close the plugin sidebar and return to the overview.
+
+#### Editor.draft
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.draft(): Draft
+```
+
+The open draft's edit and save, the same pair for as long as this opening lasts.
+
+#### Editor.get
+
+`stable` · since v0.12.0
+
+```ts
+Editor.get(): Readonly<EditorState>
+```
+
+Imperative snapshot of the editor state.
+
+#### Editor.open
+
+`stable` · since v0.12.0
+
+```ts
+Editor.open(
+  target: MaybeLocation,
+  checkDuplicates?: boolean,
+): Promise<void>
+```
+
+Open a location in the editor. With `checkDuplicates`, opening a spot with 2+ locations
+within 2m opens the duplicate-resolution panel instead. A later opening or closing
+supersedes one still loading.
+
+#### Editor.openDuplicate
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.openDuplicate(loc: Location): Promise<void>
+```
+
+Open one location from the duplicate-resolution panel in the editor.
+
+#### Editor.openImport
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.openImport(index: number): Promise<void>
+```
+
+Preview a copy of a staged-import location. The import row stays staged until Confirm.
+
+#### Editor.openPlugin
+
+`stable` · since v0.12.0
+
+```ts
+Editor.openPlugin(pluginId: string): void
+```
+
+Open a plugin's sidebar (switches the editor pane to "plugin").
+
+#### Editor.preview
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.preview(loc: Location): void
+```
+
+Open an arbitrary location read-only as a seen-preview: loads its pano without
+adding anything to the map. The caller sets LoadAsPanoId so the exact pano resolves.
+
+#### Editor.refresh
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.refresh(): Promise<void>
+```
+
+Reread the current draft. Superseded reads and errors cannot update the next opening.
+
+#### Editor.removeDuplicate
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.removeDuplicate(id: number): void
+```
+
+Drop a location from the duplicate-resolution panel (does not delete it).
+
+#### Editor.resolve
+
+`stable` · since v0.12.0
+
+```ts
+Editor.resolve(m: MaybeLocation): Promise<Location | null>
+```
+
+Resolve a `MaybeLocation` (id or object) into a full `Location`, or null if not found.
+
+#### Editor.setArea
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.setArea(area: WorkArea): void
+```
+
+Transition the editor pane, enforcing state invariants:
+leaving "location" closes the open location, leaving "plugin" clears the plugin id.
+
+#### Editor.trail
+
+`unstable` · since v0.13.0
+
+```ts
+Editor.trail: {
+  get: () => [number, number][];
+  heading: () => number;
+  reset: (lng: number, lat: number, heading: number) => void;
+  push: (lng: number, lat: number) => void;
+  face: (heading: number) => void;
+  clear: () => void;
+}
+```
+
+The positions the viewer has walked through since the location opened, [lng, lat].
+
+#### Editor.use
+
+`stable` · since v0.12.0
+
+```ts
+Editor.use<T>(selector: (s: EditorState) => T): T
+```
+
+Reactive slice of the editor state. Select fields or memoized values, as with `Store.use`.
+
+#### Editor.usePosition
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.usePosition(): LatLng
+```
+
+Where the open location stands, or 0,0 while nothing is open.
+
+#### Editor.useWriting
+
+`unstable` · since v0.12.0
+
+```ts
+Editor.useWriting(): boolean
+```
+
+Whether procedure work is still writing to the open draft.
+
+## Field
+
+### Field
+
+`stable` · since v0.12.0
+
+Rename or remove metadata fields across the map.
+
+#### Field.remove
+
+`stable` · since v0.12.0
+
+```ts
+Field.remove(key: string): Promise<void>
+```
+
+Delete extra-field `key` from every location, its definition, and the listed selections,
+in one undoable step.
+
+#### Field.rename
+
+`stable` · since v0.12.0
+
+```ts
+Field.rename(
+  from: string,
+  to: string,
+  winner?: MergeWinner,
+): Promise<void>
+```
+
+Rename extra-field `from` to `to` across all locations, its definition, and the listed
+selections, in one undoable step. When a location already holds `to`, `winner` decides
+which value survives. Saved selections are map-independent rules and keep their names.
+
+## Field def registry
+
+### declaredValues
+
+`stable` · since v0.11.1
+
+```ts
+declaredValues(def: FieldDef | undefined): string[] | null
+```
+
+The value space a field declares, as bare strings. Distinct from the store's
+`fieldValues`, which reports the values actually present in the data.
+
+### fieldLabel
+
+`stable` · since v0.10.3
+
+```ts
+fieldLabel(key: string): string
+```
+
+Translated display label for a field key, falling back to a sentence-cased version of the key.
+
+### fieldValueLabel
+
+`stable` · since v0.10.3
+
+```ts
+fieldValueLabel(def: FieldDef | undefined, value: unknown): string
+```
+
+Display label for a field value. Enum values use their translated display name.
+
+### getAllFieldDefs
+
+`stable` · since v0.5.0
+
+```ts
+getAllFieldDefs(): Record<string, FieldDef>
+```
+
+Merged view of all field definitions across all layers.
+
+### getBuiltinKeys
+
+`unstable` · since v0.10.3
+
+```ts
+getBuiltinKeys(): string[]
+```
+
+All built-in field keys (excluding virtual).
+
+### getFieldDef
+
+`stable` · since v0.5.0
+
+```ts
+getFieldDef(key: string): FieldDef | undefined
+```
+
+Look up metadata for a field key. Returns `undefined` if no layer declares it.
+
+### getFieldKeys
+
+`unstable` · since v0.11.3
+
+```ts
+getFieldKeys(): string[]
+```
+
+Every listable built-in, and every field this map defines.
+
+### getKnownFieldKeys
+
+`stable` · since v0.5.0
+
+```ts
+getKnownFieldKeys(): ReadonlySet<string>
+```
+
+Keys this map defines a field for. Same reference until the user layer moves.
+
+### isBuiltinField
+
+`stable` · since v0.10.3
+
+```ts
+isBuiltinField(key: string): boolean
+```
+
+True when `key` is a built-in Location field (stored top-level, not under `extra`).
+
+### isClearableField
+
+`unstable` · since v0.10.3
+
+```ts
+isClearableField(key: string): boolean
+```
+
+True when the field can be bulk-cleared.
+
+### isListableField
+
+`unstable` · since v0.10.3
+
+```ts
+isListableField(key: string): boolean
+```
+
+True when the field should appear in field pickers.
+
+### isWritableField
+
+`unstable` · since v0.10.3
+
+```ts
+isWritableField(key: string): boolean
+```
+
+True when the field can be bulk-edited.
+
+### partitionKeyOptions
+
+`unstable` · since v0.10.3
+
+```ts
+partitionKeyOptions(
+  type: FieldType,
+  rangeForDates: boolean,
+): {
+  id: string;
+  label: string;
+}[]
+```
+
+Partition-key dropdown options for a field type.
+
+### projectionsForType
+
+`unstable` · since v0.10.3
+
+```ts
+projectionsForType(type: FieldType): FieldProjection[]
+```
+
+Projections valid for a field type, in display order (first = dialog default).
+
+### RANGE_ID
+
+`unstable` · since v0.10.3
+
+```ts
+RANGE_ID: "range"
+```
+
+The "Range" partition option (numeric binning).
+
+### registerPluginFieldDefs
+
+`stable` · since v0.10.3
+
+```ts
+registerPluginFieldDefs(defs: Record<string, FieldDef>): void
+```
+
+Register field definitions from an enrichment provider (called at activation).
+
+### unregisterPluginFieldDefs
+
+`stable` · since v0.10.3
+
+```ts
+unregisterPluginFieldDefs(keys: string[]): void
+```
+
+Remove plugin field definitions by key (called when a plugin is deactivated).
+
+## Field defs
+
+### enabledEnrichKeys
+
+`unstable` · since v0.12.1
+
+```ts
+enabledEnrichKeys(enrichFields?: string[] | null): string[]
+```
+
+The fields enrichment fetches for `enrichFields` (the default set when null): the chosen
+ones and every field they read, so no field runs without its inputs.
+
+### enrichInputs
+
+`unstable` · since v0.12.1
+
+```ts
+enrichInputs(key: string): string[]
+```
+
+The enrichment fields `key`'s provider reads.
+
+### getAllEnrichKeys
+
+`unstable` · since v0.10.3
+
+```ts
+getAllEnrichKeys(): string[]
+```
+
+All enrichment field keys (core and plugin-registered).
+
+### getDefaultEnrichKeys
+
+`unstable` · since v0.10.3
+
+```ts
+getDefaultEnrichKeys(): string[]
+```
+
+Keys enriched when enrichFields is null (the default set: all options except defaultOff ones).
+
+### getEnrichFieldOptions
+
+`unstable` · since v0.10.3
+
+```ts
+getEnrichFieldOptions(): EnrichFieldOption[]
+```
+
+All enrichment field options: the core fields, then every registered provider's own fields.
+
+### isFieldEnabled
+
+`unstable` · since v0.10.3
+
+```ts
+isFieldEnabled(enrichFields: string[] | null, key: string): boolean
+```
+
+True when enrichment fetches `key` for the given enrichment set.
+
+### knownFieldDefs
+
+`stable` · since v0.10.3
+
+```ts
+knownFieldDefs(...keys: string[]): Record<string, FieldDef>
+```
+
+Build field definitions for well-known keys (e.g. `"altitude"`, `"countryCode"`).
+
+## History
+
+### History
+
+`stable` · since v0.12.0
+
+Navigate undo and redo history.
+
+#### History.available
+
+`unstable` · since v0.12.0
+
+```ts
+History.available(
+  history: MapState["history"],
+  stack: Stack,
+  timeline: Timeline,
+): boolean
+```
+
+Whether `timeline` can step back (undo) or forward (redo).
+
+#### History.step
+
+`stable` · since v0.12.0
+
+```ts
+History.step(stack: Stack, timeline: Timeline): Promise<void>
+```
+
+Undo the newest edit on `timeline`, or redo the newest undone one.
+
+## Legacy
+
+### addLocations
+
+`stable` · `deprecated` · since v0.3.1
+
+```ts
+addLocations(locs: Location[]): Promise<number[]>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Location.add`.
+
+Add locations to the map and return their new ids, in order. Undoable.
+
+### addSelections
+
+`unstable` · `deprecated` · since v0.5.0
+
+```ts
+addSelections(selectors: Selector[]): Promise<Mutation<ListedSelection>>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Edit.selections(MMA.addSelection(...selectors))`.
+
+### addTagToLocations
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+addTagToLocations(tagId: number, locationIds: number[]): Promise<WorkResult>
+```
+
+**Deprecated in v0.10.5.** Use `MMA.Edit.work(selector, { kind: "listSet", key: "tags", add: [tagId], remove: [] })`.
+
+### applySelectionUpdate
+
+`unstable` · `deprecated` · since v0.10.3
+
+```ts
+applySelectionUpdate(op: Of<"selections">): Promise<Mutation<ListedSelection>>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Edit.selections`.
+
+Edit the selection list. Wrap an op in `{ kind: "active", op }` to affect only active
+selections.
+
+### autosave
+
+`stable` · `deprecated` · since v0.12.0
+
+**Deprecated in v0.12.0.** Use `MMA.Autosave`.
+
+Debounced persistence of the open map: schedule, hold, cancel, or flush it.
+
+#### autosave.cancel
+
+`unstable` · since v0.12.0
+
+```ts
+autosave.cancel(): void
+```
+
+Cancel any pending autosave timer.
+
+#### autosave.exclusive
+
+`unstable` · since v0.12.0
+
+```ts
+autosave.exclusive<T>(write: () => Promise<T>): Promise<T>
+```
+
+Run `write` once every save started so far has finished, and hold later saves until it does.
+Writes to the map's files that must not interleave with a save go through here.
+
+#### autosave.flush
+
+`unstable` · since v0.12.0
+
+```ts
+autosave.flush(): Promise<void>
+```
+
+Save any unsaved changes now instead of waiting for the timer.
+
+#### autosave.paused
+
+`unstable` · since v0.13.0
+
+```ts
+autosave.paused: { hold: () => () => void; held: () => boolean }
+```
+
+What defers autosave while held. Useful for batches that land many mutations.
+
+#### autosave.schedule
+
+`unstable` · since v0.12.0
+
+```ts
+autosave.schedule(): void
+```
+
+Schedule a debounced autosave. Mutations call this automatically.
+
+#### autosave.waitForInflight
+
+`unstable` · since v0.12.0
+
+```ts
+autosave.waitForInflight(): Promise<void>
+```
+
+Wait until every save and background commit started so far has finished.
+
+### checkoutCommit
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+checkoutCommit(commitId: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Commit.checkout`.
+
+Restore a previous commit as a new revert commit and refresh the view. Clears undo/redo.
+
+### closeDuplicates
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+closeDuplicates(): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.closeDuplicates`.
+
+Close the duplicate-resolution panel and return to the overview.
+
+### closeLocation
+
+`stable` · `deprecated` · since v0.12.0
+
+```ts
+closeLocation(): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.close`.
+
+Close the open location and return to the pane it was opened from.
+
+### closeMap
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+closeMap(): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.close`.
+
+Close the open map, saving unsaved changes first.
+
+### commitMap
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+commitMap(message?: string): Promise<string>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Commit.create`.
+
+Commit all pending changes to the map's version history. Clears the undo stack.
+
+### copyName
+
+`unstable` · `deprecated` · since v0.11.4
+
+```ts
+copyName(name: string): string
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.copyName`.
+
+The name a copy of the map named `name` starts with.
+
+### countBy
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+countBy(
+  selector: Selector,
+  field: string,
+  key: KeySpec,
+): Promise<CountBy>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "countBy", fields: [field], key })`.
+
+### countIn
+
+`unstable` · `deprecated` · since v0.10.0
+
+```ts
+countIn(selector: Selector): Promise<number>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "count" })`.
+
+### coverage
+
+`unstable` · `deprecated` · since v0.10.2
+
+```ts
+coverage(selector: Selector): Promise<[string, number][]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "coverage" })`.
+
+### createMap
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+createMap(name: string, folder?: string | null): Promise<MapMeta>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.create`.
+
+Create a new empty map and return its metadata.
+
+### createPluginStorage
+
+`unstable` · `deprecated` · since v0.10.3
+
+```ts
+createPluginStorage(id: string): PluginStorage
+```
+
+**Deprecated in v0.11.0.** Use `MMA.storage()`.
+
+### currentSelection
+
+`unstable` · `deprecated` · since v0.10.0
+
+```ts
+currentSelection(): Selector
+```
+
+**Deprecated in v0.11.7.** Use the `{ type: "Selected" }` selector.
+
+### deleteField
+
+`stable` · `deprecated` · since v0.5.1
+
+```ts
+deleteField(key: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Field.remove`.
+
+Delete extra-field `key` from every location, its definition, and the listed selections,
+in one undoable step.
+
+### deleteFolder
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+deleteFolder(name: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.removeFolder`.
+
+Delete a folder. Maps at or under it become unfoldered.
+
+### deleteMap
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+deleteMap(id: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.remove`.
+
+Permanently delete a map and all its data. Not undoable.
+
+### deleteTags
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+deleteTags(tagIds: number[]): Promise<WorkResult>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.remove`.
+
+Remove tags from every location in one undoable step.
+Unreferenced tags are hidden; undo restores them.
+
+### discardOpenMap
+
+`unstable` · `deprecated` · since v0.6.1
+
+```ts
+discardOpenMap(): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.discard`.
+
+Drop the open map without persisting anything
+
+### duplicateLocation
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+duplicateLocation(id: number): Promise<number | null>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Location.duplicate`.
+
+Clone a location in place and return the new id, or null if it doesn't exist. Undoable.
+
+### duplicateMap
+
+`stable` · `deprecated` · since v0.11.4
+
+```ts
+duplicateMap(id: string, name: string): Promise<MapMeta>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.duplicate`.
+
+Copy a map, uncommitted edits included, into a new map named `name` and return its metadata.
+
+### edit
+
+`stable` · `deprecated` · since v0.12.0
+
+**Deprecated in v0.12.0.** Use `MMA.Edit`.
+
+Edit map locations, metadata, value records, and selections.
+
+#### edit.locations
+
+`unstable` · since v0.12.0
+
+```ts
+edit.locations(
+  target: Target,
+  edits: Of<"locations">["edits"],
+  records?: Of<"locations">["records"],
+): Promise<EditResult>
+```
+
+Edit locations on a map or in a pending layer, with the rows themselves or the session
+they were uploaded to (see `storeUploadBegin`). Rows refer to interned values such as tags
+by their ids in `records`, matched to the map's by name. Map changes are undoable in that
+map.
+
+#### edit.meta
+
+`stable` · since v0.12.0
+
+```ts
+edit.meta(
+  patch: Omit<Parameters<typeof cmd.storeUpdateMapMeta>[0], "id"> & {
+    id?: string;
+  },
+): Promise<void>
+```
+
+Patch a map's metadata and persist it: the open map's unless the patch names an `id`.
+Settings merge key by key, so send only the keys that change.
+
+#### edit.selections
+
+`unstable` · since v0.13.0
+
+```ts
+edit.selections(op: Of<"selections">): Promise<Mutation<ListedSelection>>
+```
+
+Edit the selection list. Wrap an op in `{ kind: "active", op }` to affect only active
+selections.
+
+#### edit.values
+
+`stable` · since v0.12.0
+
+```ts
+edit.values(
+  field: string,
+  edits: Of<"values">["edits"],
+): Promise<Mutation<ValueRecord>>
+```
+
+Edit an interned field's value records in one undoable step.
+
+#### edit.work
+
+`unstable` · since v0.12.0
+
+```ts
+edit.work(
+  selector: Selector,
+  op: Work,
+  target?: Target,
+): Promise<WorkResult>
+```
+
+Run `op` across every location `selector` matches on a map or in a pending layer. Map
+changes are one undoable step.
+
+### exitPluginMode
+
+`stable` · `deprecated` · since v0.3.1
+
+```ts
+exitPluginMode(): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.closePlugin`.
+
+Close the plugin sidebar and return to the overview.
+
+### fetchAllLocations
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+fetchAllLocations(): Promise<Location[]>
+```
+
+**Deprecated in v0.8.4.** Use `MMA.Query.read({ type: "Everything" }, { kind: "locations" })`.
+
+### fetchBounds
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+fetchBounds(
+  selector: Selector,
+): Promise<[number, number, number, number] | null>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "bounds" })`.
+
+### fetchColumns
+
+`unstable` · `deprecated` · since v0.10.0
+
+```ts
+fetchColumns(selector: Selector, fields: string[]): Promise<unknown[][]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "columns", fields })`.
+
+### fetchLocation
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+fetchLocation(id: number): Promise<Location>
+```
+
+**Deprecated in v0.8.4.** Use `MMA.Query.read({ type: "Locations", locations: [id], name: null }, { kind: "locations" })`.
+
+### fetchLocations
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+fetchLocations(selector: Selector): Promise<Location[]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "locations" })`.
+
+### fetchLocationsByIds
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+fetchLocationsByIds(ids: number[]): Promise<Location[]>
+```
+
+**Deprecated in v0.8.4.** Use `MMA.Query.read({ type: "Locations", locations: ids, name: null }, { kind: "locations" })`.
+
+### fieldCoverage
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+fieldCoverage(selector: Selector): Promise<[string, number][]>
+```
+
+**Deprecated in v0.10.2.** Use `MMA.Query.read(selector, { kind: "coverage" })`.
+
+### fieldValues
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+fieldValues(selector: Selector, field: string): Promise<string[]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "values", field })`.
+
+### getActiveLocation
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+getActiveLocation(): Location | null
+```
+
+**Deprecated in v0.8.2.** Read `MMA.Editor.get().open?.location`.
+
+### getActiveSelections
+
+`unstable` · `deprecated` · since v0.8.2
+
+```ts
+getActiveSelections(): Selection[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.SelectionList.active`.
+
+Listed selections that are not ghosted.
+
+### getAllSelections
+
+`unstable` · `deprecated` · since v0.6.3
+
+```ts
+getAllSelections(): Selection[]
+```
+
+**Deprecated in v0.8.2.** Read `MMA.SelectionList.listed()`.
+
+### getCurrentMap
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+getCurrentMap(): Omit<
+  MapMeta,
+  "extra" | "locationCount" | "pending"
+> | null
+```
+
+**Deprecated in v0.8.2.** Read `MMA.Store.get().map`.
+
+### getCurrentMapId
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+getCurrentMapId(): string | null
+```
+
+**Deprecated in v0.8.2.** Read `MMA.Store.get().mapId`.
+
+### getGhostedSelections
+
+`unstable` · `deprecated` · since v0.7.4
+
+```ts
+getGhostedSelections(): Set<string>
+```
+
+**Deprecated in v0.8.2.** Read `MMA.SelectionList.listed()`.
+
+### getGoogleMap
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+getGoogleMap(): google.maps.Map | null
+```
+
+**Deprecated in v0.8.1.** Use `MMA.MapHost.get()` and narrow via `MMA.MapHost.instance`.
+
+### getMapBadges
+
+`unstable` · `deprecated` · since v0.11.3
+
+```ts
+getMapBadges(): Map<string, MapBadge[]>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.badges`.
+
+Badges per map id, from every registered source.
+
+### getMapBadgeSources
+
+`unstable` · `deprecated` · since v0.11.3
+
+```ts
+getMapBadgeSources(): readonly BadgeSource[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.badgeSources`.
+
+Every registered badge source, in registration order.
+
+### getMapHost
+
+`unstable` · `deprecated` · since v0.8.0
+
+```ts
+getMapHost(): MapHost | null
+```
+
+**Deprecated in v0.12.0.** Use `MMA.MapHost.get`.
+
+Return the main editor map host, or null if not mounted.
+
+### getMapList
+
+`stable` · `deprecated` · since v0.7.0
+
+```ts
+getMapList(): MapMeta[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.list`.
+
+The list of all maps (metadata only).
+
+### getMapState
+
+`stable` · `deprecated` · since v0.8.2
+
+```ts
+getMapState(): Readonly<MapState>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Store.get`.
+
+Imperative snapshot of the map state.
+
+### getScenePositions
+
+`unstable` · `deprecated` · since v0.9.0
+
+```ts
+getScenePositions(): {
+  ids: Uint32Array;
+  positions: Float32Array;
+}
+```
+
+**Deprecated in v0.13.0.** Use `MMA.Scene.positions`.
+
+Snapshot of every rendered location's id and position (`[lng, lat, ...]`).
+
+### getSelectedLocationIds
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+getSelectedLocationIds(): SelectedIds
+```
+
+**Deprecated in v0.8.2.** Read `MMA.Scene.selected()`.
+
+### getSelectedTagIds
+
+`unstable` · `deprecated` · since v0.8.2
+
+```ts
+getSelectedTagIds(): ReadonlySet<number>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.SelectionList.tagIds`.
+
+Tag ids with a top-level listed tag selection, including ghosted selections.
+
+### getSelectedTagIdsDeep
+
+`unstable` · `deprecated` · since v0.9.2
+
+```ts
+getSelectedTagIdsDeep(): readonly number[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.SelectionList.tagIdsDeep`.
+
+Tag ids from active selection leaves, including repeated ids and composite children.
+
+### getSelections
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+getSelections(): Selection[]
+```
+
+**Deprecated in v0.8.2.** Use `MMA.SelectionList.active()`.
+
+### getTag
+
+`stable` · `deprecated` · since v0.7.0
+
+```ts
+getTag(id: number): Tag | undefined
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.get`.
+
+Look up a tag record, including unreferenced tags.
+
+### getTagCounts
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+getTagCounts(): Record<number, number>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.counts`.
+
+Per-tag location counts, keyed by numeric id.
+
+### getTags
+
+`stable` · `deprecated` · since v0.11.1
+
+```ts
+getTags(): Record<number, Tag>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.all`.
+
+Tag records, including unreferenced records.
+
+### getVisibleTags
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+getVisibleTags(): Tag[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.visible`.
+
+Tag records referenced by at least one location.
+
+### getWorkArea
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+getWorkArea(): WorkArea
+```
+
+**Deprecated in v0.8.2.** Read `MMA.Editor.get().workArea`.
+
+### historyAvailable
+
+`unstable` · `deprecated` · since v0.12.0
+
+```ts
+historyAvailable(
+  history: MapState["history"],
+  stack: Stack,
+  timeline: Timeline,
+): boolean
+```
+
+**Deprecated in v0.12.0.** Use `MMA.History.available`.
+
+Whether `timeline` can step back (undo) or forward (redo).
+
+### initStore
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+initStore(): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.init`.
+
+One-time store startup. The app calls this; plugins never need to.
+
+### installedVersion
+
+`unstable` · `deprecated` · since v0.10.3
+
+```ts
+installedVersion(pluginId: string): Promise<string | null>
+```
+
+**Deprecated in v0.11.0.** Use `MMA.sidecar.installedVersion()`.
+
+### invalidateMapList
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+invalidateMapList(): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.reload`.
+
+Refresh the map list from disk.
+
+### isReservedMap
+
+`unstable` · `deprecated` · since v0.10.1
+
+```ts
+isReservedMap(id: string | null): boolean
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.isReserved`.
+
+Whether `id` belongs to an app fixture rather than a user-created map.
+
+### locationsOf
+
+`stable` · `deprecated` · since v0.12.0
+
+```ts
+locationsOf(list: LocationList): Promise<Location[]>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Query.locationsOf`.
+
+The locations an answer carries, fetched from its temp file when it was too large to send inline.
+
+### moveMapToFolder
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+moveMapToFolder(mapId: string, folder: string | null): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.moveToFolder`.
+
+Move a map into a folder, or to the root when `folder` is null.
+
+### mutate
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+mutate<
+  R extends
+    | Mutation
+    | {
+        mutation: Mutation;
+      } = Mutation,
+>(
+  fn: () => Promise<R>,
+  ...fallback: Mutation extends R ? [empty?: R] : [empty: R]
+): Promise<R>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Mutation.run`.
+
+### openDuplicateLocation
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+openDuplicateLocation(loc: Location): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.openDuplicate`.
+
+Open one location from the duplicate-resolution panel in the editor.
+
+### openLocation
+
+`stable` · `deprecated` · since v0.12.0
+
+```ts
+openLocation(
+  target: MaybeLocation,
+  checkDuplicates?: boolean,
+): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.open`.
+
+Open a location in the editor. With `checkDuplicates`, opening a spot with 2+ locations
+within 2m opens the duplicate-resolution panel instead. A later opening or closing
+supersedes one still loading.
+
+### openMap
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+openMap(id: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.open`.
+
+Open a map in this window, closing any currently open map first.
+
+### openScratchMap
+
+`stable` · `deprecated` · since v0.10.1
+
+```ts
+openScratchMap(): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.openScratch`.
+
+Open the scratch map, creating it on first use.
+
+### openStagedLocation
+
+`unstable` · `deprecated` · since v0.6.0
+
+```ts
+openStagedLocation(index: number): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.openImport`.
+
+Preview a copy of a staged-import location. The import row stays staged until Confirm.
+
+### partition
+
+`unstable` · `deprecated` · since v0.6.2
+
+```ts
+partition(
+  field: string,
+  key: KeySpec,
+  selector: Selector,
+): Promise<PartitionBucket[]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "groupBy", field, key })`.
+
+### previewDuplicateGroups
+
+`unstable` · `deprecated` · since v0.5.1
+
+```ts
+previewDuplicateGroups(distance: number): Promise<number[][]>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Location.duplicateGroups`.
+
+Read-only preview of transitive duplicate groups (size >= 2) within `distance` metres.
+
+### previewLocation
+
+`unstable` · `deprecated` · since v0.12.0
+
+```ts
+previewLocation(loc: Location): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.preview`.
+
+Open an arbitrary location read-only as a seen-preview: loads its pano without
+adding anything to the map. The caller sets LoadAsPanoId so the exact pano resolves.
+
+### query
+
+`unstable` · `deprecated` · since v0.11.3
+
+```ts
+query(
+  selector: Selector,
+  target?: Target,
+): {
+  /** Resolved ids in ascending order, or in ranked-selector order. */
+  ids: () => Promise<number[]>;
+  /** Number of locations the selector resolves to. */
+  count: () => Promise<number>;
+  /** Bounding box [west, south, east, north], or null when nothing resolves. */
+  bounds: () => Promise<[number, number, number, number] | null>;
+  /** n ids drawn uniformly at random, without replacement. */
+  sample: (n: number) => Promise<number[]>;
+  /** Distinct values of field, sorted. */
+  values: (field: string) => Promise<string[]>;
+  /** Group each field by a derived key and count, one result per field. */
+  countBy: (fields: string[], key: KeySpec) => Promise<CountBy[]>;
+  /** How many locations hold a value for each field, key-sorted. */
+  coverage: () => Promise<[string, number][]>;
+  /** One column per field: null for missing values and value-id lists for interned fields. */
+  columns: (fields: string[]) => Promise<unknown[][]>;
+  /** Group by a derived key; bins use bound order and other keys sort naturally. */
+  partition: (field: string, key: KeySpec) => Promise<PartitionBucket[]>;
+  /** Full matching locations, loading any large result from its temporary file. */
+  locations: () => Promise<Location[]>;
+}
+```
+
+**Deprecated in v0.12.0.** Use MMA.Query.read(selector, ask) instead.
+
+### read
+
+`stable` · `deprecated` · since v0.12.0
+
+```ts
+read<
+  A extends Ask,
+  I extends Selector | readonly Selector[] = Selector,
+>(
+  selectors: I,
+  ask: A,
+  target?: Target,
+): Promise<Each<I, ReadResult<AnswerOf<A["kind"]>>>>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Query.read`.
+
+Ask one question about the locations a selector matches, or about each of a list of
+selectors in one read, answered in order. A full-location answer loads any backing file
+automatically; ask for ids or columns when full locations are unnecessary.
+
+### registerEnrichFields
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+registerEnrichFields(_fields: EnrichFieldOption[]): void
+```
+
+**Deprecated in v0.11.3.** A provider's `fieldDefs` are offered as enrichment options on their
+own; set `defaultOff` on the provider to make them opt-in.
+
+### registerEnrichmentProvider
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+registerEnrichmentProvider(provider: Provider): void
+```
+
+**Deprecated in v0.10.2.** Use `MMA.Provider.register()`.
+
+### registerMapBadges
+
+`unstable` · `deprecated` · since v0.11.3
+
+```ts
+registerMapBadges(source: BadgeSource): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.registerBadges`.
+
+Add a source of map-row badges.
+
+### registerProvider
+
+`stable` · `deprecated` · since v0.10.2
+
+```ts
+registerProvider(provider: Provider): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Provider.register`.
+
+Register a provider (e.g. a plugin's sun position). Unregistered when the plugin
+deactivates. Resolves once the provider can run.
+
+### reloadMapList
+
+`unstable` · `deprecated` · since v0.8.1
+
+```ts
+reloadMapList(): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.reload`.
+
+Refresh the map list from disk.
+
+### removeDuplicate
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+removeDuplicate(id: number): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.removeDuplicate`.
+
+Drop a location from the duplicate-resolution panel (does not delete it).
+
+### removeLocations
+
+`stable` · `deprecated` · since v0.3.1
+
+```ts
+removeLocations(ids: ReadonlyIdSet): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Location.remove`.
+
+Remove locations by id. Undoable.
+
+### removeSelections
+
+`unstable` · `deprecated` · since v0.5.0
+
+```ts
+removeSelections(keys: string[]): Promise<Mutation<ListedSelection>>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Edit.selections({ kind: "remove", keys })`.
+
+### removeTagFromAllLocations
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+removeTagFromAllLocations(tagId: number): Promise<WorkResult>
+```
+
+**Deprecated in v0.10.5.** Use `MMA.Edit.work(MMA.tagSelector(tagId), { kind: "listSet", key: "tags", add: [], remove: [tagId] })`.
+
+### removeTagFromLocations
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+removeTagFromLocations(tagId: number, locationIds: number[]): Promise<WorkResult>
+```
+
+**Deprecated in v0.10.5.** Use `MMA.Edit.work(selector, { kind: "listSet", key: "tags", add: [], remove: [tagId] })`.
+
+### renameField
+
+`stable` · `deprecated` · since v0.5.1
+
+```ts
+renameField(
+  from: string,
+  to: string,
+  winner?: MergeWinner,
+): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Field.rename`.
+
+Rename extra-field `from` to `to` across all locations, its definition, and the listed
+selections, in one undoable step. When a location already holds `to`, `winner` decides
+which value survives. Saved selections are map-independent rules and keep their names.
+
+### renameFolder
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+renameFolder(from: string, to: string): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.renameFolder`.
+
+Rename a folder, moving all its maps (and subfolders) to the new name.
+
+### request
+
+`unstable` · `deprecated` · since v0.10.3
+
+```ts
+request<T>(
+  pluginId: string,
+  command: string,
+  payload?: unknown,
+  opts?: SidecarOptions<T>,
+): Promise<T | null>
+```
+
+**Deprecated in v0.11.0.** Use `MMA.sidecar.request()`.
+
+### resetSelections
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+resetSelections(): Promise<Mutation<ListedSelection>>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Edit.selections({ kind: "set", selections: [] })`.
+
+### resolveIds
+
+`unstable` · `deprecated` · since v0.10.0
+
+```ts
+resolveIds(selector: Selector): Promise<number[]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read(selector, { kind: "ids" })`.
+
+### resolveLocation
+
+`stable` · `deprecated` · since v0.6.6
+
+```ts
+resolveLocation(m: MaybeLocation): Promise<Location | null>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.resolve`.
+
+Resolve a `MaybeLocation` (id or object) into a full `Location`, or null if not found.
+
+### sampleFrom
+
+`unstable` · `deprecated` · since v0.10.0
+
+```ts
+sampleFrom(selector: Selector, n: number): Promise<number[]>
+```
+
+**Deprecated in v0.11.3.** Use `MMA.Query.read({ type: "Sample", selection: MMA.selection(selector), n }, { kind: "ids" })`.
+
+### select
+
+`unstable` · `deprecated` · since v0.12.0
+
+```ts
+select<
+  R extends
+    | number[]
+    | {
+        ids: number[];
+      },
+>(
+  pick: (selector: Selector) => Promise<R>,
+  perSelection?: boolean,
+): Promise<{
+  picked: number;
+  results: R[];
+}>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.SelectionList.select`.
+
+### setActiveLocation
+
+`unstable` · `deprecated` · since v0.3.1
+
+```ts
+setActiveLocation(
+  target: MaybeLocation | null,
+  checkDuplicates?: boolean,
+): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.open(target)`, or `MMA.Editor.close()` in place of null.
+
+### setPluginMode
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+setPluginMode(pluginId: string): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.openPlugin`.
+
+Open a plugin's sidebar (switches the editor pane to "plugin").
+
+### settled
+
+`stable` · `deprecated` · since v0.12.0
+
+```ts
+settled(m: Mutation): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Mutation.settle`.
+
+Resolves once the open map's state and its markers both show `m`. A mutation that reached
+no map (version 0) settles at once.
+
+### setUserFieldDefs
+
+`unstable` · `deprecated` · since v0.10.3
+
+```ts
+setUserFieldDefs(fields: Record<string, FieldDef>): Promise<void>
+```
+
+**Deprecated in v0.10.5.** The user layer is store-owned state (`MMA.Store.get().fieldDefs`);
+use `MMA.Edit.meta({ extra: { fields } })` to change it, or `MMA.registerPluginFieldDefs()`
+for plugin-owned defs.
+
+### setWorkArea
+
+`unstable` · `deprecated` · since v0.4.0
+
+```ts
+setWorkArea(area: WorkArea): void
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Editor.setArea`.
+
+Transition the editor pane, enforcing state invariants:
+leaving "location" closes the open location, leaving "plugin" clears the plugin id.
+
+### tagIdsToNames
+
+`stable` · `deprecated` · since v0.9.0
+
+```ts
+tagIdsToNames(ids: number[]): string[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Tag.names`.
+
+Tag names for the given ids, skipping any that no longer resolve.
+
+### updateLocations
+
+`stable` · `deprecated` · since v0.6.3
+
+```ts
+updateLocations(updates: Patch<Location>[]): Promise<void>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Location.update`.
+
+Patch locations by id. Only include the fields you're changing; `extra` merges
+per-key (null deletes a key). Undoable by default.
+
+### useMapBadges
+
+`unstable` · `deprecated` · since v0.11.3
+
+```ts
+useMapBadges(): Map<string, MapBadge[]>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.useBadges`.
+
+Reactive Maps.badges.
+
+### useMapList
+
+`stable` · `deprecated` · since v0.4.0
+
+```ts
+useMapList(): MapMeta[]
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Maps.useList`.
+
+Reactive list of all maps (metadata only).
+
+### useMapState
+
+`stable` · `deprecated` · since v0.8.2
+
+```ts
+useMapState<T>(selector: (s: MapState) => T): T
+```
+
+**Deprecated in v0.12.0.** Use `MMA.Store.use`.
+
+Reactive slice of the map state. Re-renders only when the selected value's
+reference changes (`Object.is`), so selectors must return state fields or
+memoized values, not a new value per call.
+
+### usePluginState
+
+`stable` · `deprecated` · since v0.7.4
+
+```ts
+usePluginState<T>(
+  pluginId: string,
+  key: string,
+  initial: T | (() => T),
+): readonly [T, (action: SetStateAction<T>) => void]
+```
+
+**Deprecated in v0.13.1.** Use `MMA.pluginSetting(pluginId, key, fallback).use()`.
+
+### waitForGoogleMap
+
+`unstable` · `deprecated` · since v0.5.0
+
+```ts
+waitForGoogleMap(): Promise<google.maps.Map | null>
+```
+
+**Deprecated in v0.8.1.** Use `MMA.MapHost.wait()`.
+
+### waitForMapHost
+
+`unstable` · `deprecated` · since v0.8.0
+
+```ts
+waitForMapHost(): Promise<MapHost>
+```
+
+**Deprecated in v0.12.0.** Use `MMA.MapHost.wait`.
+
+Wait for the main editor map to be ready.
+
+## Location
+
+### Location
+
+`stable` · since v0.12.0
+
+Add, update, remove, and inspect map locations.
+
+#### Location.add
+
+`stable` · since v0.12.0
+
+```ts
+Location.add(locs: Location[]): Promise<number[]>
+```
+
+Add locations to the map and return their new ids, in order. Undoable.
+
+#### Location.addTo
+
+`unstable` · since v0.12.0
+
+```ts
+Location.addTo(
+  mapId: string,
+  location: Location,
+  records: Parameters<typeof Edit.locations>[2],
+): Promise<boolean>
+```
+
+Add `location` to another map unless that map already holds it, its interned values
+named by `records`. Resolves to whether it was added. Undoable in that map.
+
+#### Location.duplicate
+
+`stable` · since v0.12.0
+
+```ts
+Location.duplicate(id: number): Promise<number | null>
+```
+
+Clone a location in place and return the new id, or null if it doesn't exist. Undoable.
+
+#### Location.duplicateGroups
+
+`unstable` · since v0.12.0
+
+```ts
+Location.duplicateGroups(distance: number): Promise<number[][]>
+```
+
+Read-only preview of transitive duplicate groups (size >= 2) within `distance` metres.
+
+#### Location.remove
+
+`stable` · since v0.12.0
+
+```ts
+Location.remove(ids: ReadonlyIdSet): Promise<void>
+```
+
+Remove locations by id. Undoable.
+
+#### Location.update
+
+`stable` · since v0.12.0
+
+```ts
+Location.update(updates: Patch<Location>[]): Promise<void>
+```
+
+Patch locations by id. Only include the fields you're changing; `extra` merges
+per-key (null deletes a key). Undoable by default.
+
+## Maps
+
+### Maps
+
+`stable` · since v0.12.0
+
+Create, list, open, close, and organize maps.
+
+#### Maps.badges
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.badges(): Map<string, MapBadge[]>
+```
+
+Badges per map id, from every registered source.
+
+#### Maps.badgeSources
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.badgeSources(): readonly BadgeSource[]
+```
+
+Every registered badge source, in registration order.
+
+#### Maps.close
+
+`stable` · since v0.12.0
+
+```ts
+Maps.close(): Promise<void>
+```
+
+Close the open map, saving unsaved changes first.
+
+#### Maps.copyName
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.copyName(name: string): string
+```
+
+The name a copy of the map named `name` starts with.
+
+#### Maps.create
+
+`stable` · since v0.12.0
+
+```ts
+Maps.create(name: string, folder?: string | null): Promise<MapMeta>
+```
+
+Create a new empty map and return its metadata.
+
+#### Maps.discard
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.discard(): void
+```
+
+Drop the open map without persisting anything
+
+#### Maps.duplicate
+
+`stable` · since v0.12.0
+
+```ts
+Maps.duplicate(id: string, name: string): Promise<MapMeta>
+```
+
+Copy a map, uncommitted edits included, into a new map named `name` and return its metadata.
+
+#### Maps.init
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.init(): Promise<void>
+```
+
+One-time store startup. The app calls this; plugins never need to.
+
+#### Maps.isReserved
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.isReserved(id: string | null): boolean
+```
+
+Whether `id` belongs to an app fixture rather than a user-created map.
+
+#### Maps.list
+
+`stable` · since v0.12.0
+
+```ts
+Maps.list(): MapMeta[]
+```
+
+The list of all maps (metadata only).
+
+#### Maps.moveToFolder
+
+`stable` · since v0.12.0
+
+```ts
+Maps.moveToFolder(mapId: string, folder: string | null): Promise<void>
+```
+
+Move a map into a folder, or to the root when `folder` is null.
+
+#### Maps.open
+
+`stable` · since v0.12.0
+
+```ts
+Maps.open(id: string): Promise<void>
+```
+
+Open a map in this window, closing any currently open map first.
+
+#### Maps.openScratch
+
+`stable` · since v0.12.0
+
+```ts
+Maps.openScratch(): Promise<void>
+```
+
+Open the scratch map, creating it on first use.
+
+#### Maps.registerBadges
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.registerBadges(source: BadgeSource): void
+```
+
+Add a source of map-row badges.
+
+#### Maps.reload
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.reload(): Promise<void>
+```
+
+Refresh the map list from disk.
+
+#### Maps.remove
+
+`stable` · since v0.12.0
+
+```ts
+Maps.remove(id: string): Promise<void>
+```
+
+Permanently delete a map and all its data. Not undoable.
+
+#### Maps.removeFolder
+
+`stable` · since v0.12.0
+
+```ts
+Maps.removeFolder(name: string): Promise<void>
+```
+
+Delete a folder. Maps at or under it become unfoldered.
+
+#### Maps.renameFolder
+
+`stable` · since v0.12.0
+
+```ts
+Maps.renameFolder(from: string, to: string): Promise<void>
+```
+
+Rename a folder, moving all its maps (and subfolders) to the new name.
+
+#### Maps.useBadges
+
+`unstable` · since v0.12.0
+
+```ts
+Maps.useBadges(): Map<string, MapBadge[]>
+```
+
+Reactive Maps.badges.
+
+#### Maps.useList
+
+`stable` · since v0.12.0
+
+```ts
+Maps.useList(): MapMeta[]
+```
+
+Reactive list of all maps (metadata only).
+
+## Mutation
+
+### Mutation
+
+`stable` · since v0.12.0
+
+Run mutations and wait for their state and display updates.
+
+#### Mutation.none
+
+`stable` · since v0.12.0
+
+```ts
+Mutation.none(): Mutation
+```
+
+The result of a mutation that reached no map.
+
+#### Mutation.run
+
+`stable` · since v0.12.0
+
+```ts
+Mutation.run<
+  R extends
+    | Mutation
+    | {
+        mutation: Mutation;
+      } = Mutation,
+>(
+  fn: () => Promise<R>,
+  ...fallback: Mutation extends R ? [empty?: R] : [empty: R]
+): Promise<R>
+```
+
+#### Mutation.settle
+
+`stable` · since v0.12.0
+
+```ts
+Mutation.settle(m: Mutation): Promise<void>
+```
+
+Resolves once the open map's state and its markers both show `m`. A mutation that reached
+no map (version 0) settles at once.
+
+#### Mutation.write
+
+`stable` · since v0.13.0
+
+```ts
+Mutation.write<
+  R extends
+    | Mutation
+    | {
+        mutation: Mutation;
+      }
+    | null,
+>(fn: () => Promise<R>): Promise<R>
+```
+
+Send a store write, then wait until the open map shows it.
+
+## Plugin storage
+
+### mapStorage
+
+`stable` · since v0.11.4
+
+```ts
+mapStorage(id: string): MapPluginStorage
+```
+
+Persistent key-value storage a plugin keeps with the open map, so every map has its own.
+Each write changes only one key, patched onto the current map settings.
+
+### pluginSetting
+
+`stable` · since v0.13.1
+
+```ts
+pluginSetting<T>(
+  pluginId: string,
+  key: string,
+  fallback: T,
+): PluginSetting<T>
+```
+
+A typed value under `key` in the plugin's persistent store. A stored value of another
+type than `fallback` reads as `fallback`.
+
+### storage
+
+`stable` · since v0.6.1
+
+```ts
+storage(id: string): PluginStorage
+```
+
+Persistent key-value storage namespaced to a plugin. Survives restarts.
+
+## Procedure
+
+### Procedure
+
+`stable` · since v0.12.0
+
+Procedure modules: ask one a question, or run one over locations.
+
+#### Procedure.decl
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.decl(spec: ProcedureSpec, config?: unknown): ProcedureDecl
+```
+
+The part of a spec the engine reads for a run and a query alike, with `config` as the
+JSON text the wire carries.
+
+#### Procedure.drive
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.drive(
+  scheduled: Scheduled[],
+  opts: RunOpts,
+): Promise<ProcedureOutcomes>
+```
+
+Drive scheduled items through the engine as one run and gather what comes back.
+
+#### Procedure.entry
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.entry(name: string): string
+```
+
+Entry point of a procedure this app bundles. Plugins ship their own paths.
+
+#### Procedure.name
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.name(entry: string): string
+```
+
+The readable name behind an entry point, for surfaces that show one.
+
+#### Procedure.noWork
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.noWork(): BatchOutcome
+```
+
+An outcome for work that never ran.
+
+#### Procedure.query
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.query<T = unknown, P = unknown>(
+  spec: ProcedureSpec,
+  input: unknown,
+  opts?: {
+    signal?: AbortSignal;
+    onPartial?: (
+      entries: {
+        id: number;
+        value: P;
+      }[],
+    ) => void;
+  },
+): Promise<T>
+```
+
+Ask a procedure a read-only question under its declared network limits. Rejects when it
+exports no `query`, when the call fails, or when `signal` aborts. `onPartial` receives
+pages of answers as they resolve, ahead of the full result; each entry carries the id
+the emitting side chose for it.
+
+#### Procedure.run
+
+`unstable` · since v0.12.0
+
+```ts
+Procedure.run<T, C>(
+  spec: ProcedureSpec<T, C>,
+  selector: Selector,
+  opts: Omit<RunOpts, "force"> &
+    RunSettings & {
+      config?: Partial<NoInfer<C>>;
+    },
+): Promise<ProcedureOutcome<T>>
+```
+
+Run a single procedure over `selector` and return its typed results.
+
+## Provider
+
+### Provider
+
+`stable` · since v0.12.0
+
+Registered field producers: register one, list them, or run them over locations.
+
+#### Provider.forField
+
+`unstable` · since v0.12.0
+
+```ts
+Provider.forField(field: string): Provider | undefined
+```
+
+The provider that produces a given extra field, if any.
+
+#### Provider.labels
+
+`unstable` · since v0.12.0
+
+```ts
+Provider.labels(
+  field: string,
+  keys: string[],
+  key?: KeySpec,
+): Promise<string[]>
+```
+
+Display labels for a field's partition keys. Month-of-year keys are numeric tokens and
+become locale month names; otherwise falls back to the keys themselves when the field's
+procedure has no `label` query or returns a non-matching array.
+
+#### Provider.list
+
+`unstable` · since v0.12.0
+
+```ts
+Provider.list(): Provider[]
+```
+
+All registered providers.
+
+#### Provider.register
+
+`stable` · since v0.12.0
+
+```ts
+Provider.register(provider: Provider): Promise<void>
+```
+
+Register a provider (e.g. a plugin's sun position). Unregistered when the plugin
+deactivates. Resolves once the provider can run.
+
+#### Provider.run
+
+`unstable` · since v0.12.0
+
+```ts
+Provider.run<C extends readonly unknown[]>(
+  runs: { [K in keyof C]: ProviderRun<C[K]> },
+  selector: Selector,
+  opts?: RunOpts,
+): Promise<ProcedureOutcomes>
+```
+
+Run registered providers over the locations `selector` matches and write their results
+back. Resolves once every provider finishes, or on abort.
+
+## Query
+
+### Query
+
+`stable` · since v0.12.0
+
+Read locations and summaries for selectors.
+
+#### Query.locationsOf
+
+`stable` · since v0.12.0
+
+```ts
+Query.locationsOf(list: LocationList): Promise<Location[]>
+```
+
+The locations an answer carries, fetched from its temp file when it was too large to send inline.
+
+#### Query.read
+
+`stable` · since v0.12.0
+
+```ts
+Query.read<
+  A extends Ask,
+  I extends Selector | readonly Selector[] = Selector,
+>(
+  selectors: I,
+  ask: A,
+  target?: Target,
+): Promise<Each<I, ReadResult<AnswerOf<A["kind"]>>>>
+```
+
+Ask one question about the locations a selector matches, or about each of a list of
+selectors in one read, answered in order. A full-location answer loads any backing file
+automatically; ask for ids or columns when full locations are unnecessary.
+
+## Registry
+
+### activatePlugin
+
+`unstable` · since v0.10.3
+
+```ts
+activatePlugin(id: string): void
+```
+
+Activate a single plugin by id.
+
+### getPlugin
+
+`stable` · since v0.10.3
+
+```ts
+getPlugin(id: string): Plugin | undefined
+```
+
+Look up a registered plugin by id.
+
+### getPlugins
+
+`stable` · since v0.10.3
+
+```ts
+getPlugins(): Plugin[]
+```
+
+All registered plugins, sorted by name.
+
+### isBackgroundPlugin
+
+`stable` · since v0.10.3
+
+```ts
+isBackgroundPlugin(id: string): boolean
+```
+
+True when the plugin contributes data only and has no UI surfaces.
+
+### isReady
+
+`unstable` · since v0.10.3
+
+```ts
+isReady(): boolean
+```
+
+True once the MMA surface is installed and plugins are safe to call it.
+
+### registerPlugin
+
+`stable` · since v0.3.1
+
+```ts
+registerPlugin(plugin: Plugin | PluginBehavior): void
+```
+
+Register a plugin. `activate` runs when a map opens; its returned cleanup runs on map close.
+
+### setPluginEnabled
+
+`unstable` · since v0.10.3
+
+```ts
+setPluginEnabled(id: string, enabled: boolean): void
+```
+
+Enable or disable a plugin.
+
+### unregisterPlugin
+
+`unstable` · since v0.10.3
+
+```ts
+unregisterPlugin(id: string): void
+```
+
+Remove a plugin from the registry.
+
+## Scope
+
+### definePluginEvent
+
+`unstable` · since v0.11.0
+
+```ts
+definePluginEvent<T = void>(pluginId: string, name: string): PluginEvent<T>
+```
+
+Name one of plugin `pluginId`'s own events, carrying a `T`. Define it once and share it, so
+whoever raises it and whoever hears it agree on the payload.
+
+### emitPluginEvent
+
+`unstable` · since v0.11.0
+
+```ts
+emitPluginEvent<T>(
+  event: PluginEvent<T>,
+  ...payload: T extends void ? [] : [payload: T]
+): void
+```
+
+Raise one of a plugin's own events, with its payload when it carries one.
+
+### on
+
+`stable` · since v0.3.1
+
+```ts
+on<E extends EditorEvent | PluginEvent<unknown>>(
+  event: E,
+  handler: EventHandler<E>,
+): () => void
+```
+
+Subscribe to an editor event or a plugin's own event, automatically unsubscribed on plugin
+deactivation.
+
+### resolvePluginPath
+
+`unstable` · since v0.10.3
+
+```ts
+resolvePluginPath(path: string): string
+```
+
+Resolve a relative path against the current plugin's base directory. Absolute
+paths and `res://` URLs pass through unchanged.
+
+### trackDisposable
+
+`unstable` · since v0.10.3
+
+```ts
+trackDisposable(dispose: Disposable): void
+```
+
+Enroll a teardown callback under the current plugin. No-op outside activation.
+
+### usePluginEvent
+
+`unstable` · since v0.11.0
+
+```ts
+usePluginEvent<V>(event: PluginEvent<unknown>, read: () => V): V
+```
+
+React hook: what `read` returns, read again each time `event` is raised. `read` must return
+the same reference while nothing it reads has changed.
+
+## Sidecar
+
+### sidecar
+
+`stable` · since v0.7.0
+
+The nested `sidecar` namespace on the plugin surface.
+
+#### sidecar.installedVersion
+
+`stable` · since v0.7.0
+
+```ts
+sidecar.installedVersion(pluginId: string): Promise<string | null>
+```
+
+The sidecar version installed for a plugin, or null when it has none yet.
+
+#### sidecar.request
+
+`stable` · since v0.9.0
+
+```ts
+sidecar.request<T>(
+  pluginId: string,
+  command: string,
+  payload?: unknown,
+  opts?: SidecarOptions<T>,
+): Promise<T | null>
+```
+
+Send a command to a plugin's sidecar and resolve with its last emitted JSON
+object (null if it emitted none). `payload` is sent as JSON.
+
+## Store
+
+### Store
+
+`stable` · since v0.12.0
+
+Read and update the open map state.
+
+#### Store.get
+
+`stable` · since v0.13.0
+
+```ts
+Store.get(): Readonly<MapState>
+```
+
+Imperative snapshot of the map state.
+
+#### Store.use
+
+`stable` · since v0.13.0
+
+```ts
+Store.use<T>(selector: (s: MapState) => T): T
+```
+
+Reactive slice of the map state. Re-renders only when the selected value's
+reference changes (`Object.is`), so selectors must return state fields or
+memoized values, not a new value per call.
+
+## Tag
+
+### Tag
+
+`stable` · since v0.12.0
+
+Manage tag records and their assignment to locations.
+
+#### Tag.all
+
+`stable` · since v0.12.0
+
+```ts
+Tag.all(): Record<number, Tag>
+```
+
+Tag records, including unreferenced records.
+
+#### Tag.assign
+
+`stable` · since v0.12.0
+
+```ts
+Tag.assign(
+  selector: Selector,
+  records: TagCreate[],
+): Promise<WorkResult>
+```
+
+Get or create tag records and assign them to matching locations.
+
+#### Tag.counts
+
+`stable` · since v0.12.0
+
+```ts
+Tag.counts(): Record<number, number>
+```
+
+Per-tag location counts, keyed by numeric id.
+
+#### Tag.create
+
+`stable` · since v0.12.0
+
+```ts
+Tag.create(records: TagCreate[]): Promise<number[]>
+```
+
+Get or create tag records by name and return their ids.
+
+#### Tag.get
+
+`stable` · since v0.12.0
+
+```ts
+Tag.get(id: number): Tag | undefined
+```
+
+Look up a tag record, including unreferenced tags.
+
+#### Tag.names
+
+`stable` · since v0.12.0
+
+```ts
+Tag.names(ids: number[]): string[]
+```
+
+Tag names for the given ids, skipping any that no longer resolve.
+
+#### Tag.remove
+
+`stable` · since v0.12.0
+
+```ts
+Tag.remove(tagIds: number[]): Promise<WorkResult>
+```
+
+Remove tags from every location in one undoable step.
+Unreferenced tags are hidden; undo restores them.
+
+#### Tag.rename
+
+`stable` · since v0.12.0
+
+```ts
+Tag.rename(
+  ids: number[],
+  name: string,
+  scope?: Selector | null,
+): Promise<void>
+```
+
+Move matching locations to a tag with the given name, optionally within a selector.
+
+#### Tag.reorder
+
+`stable` · since v0.12.0
+
+```ts
+Tag.reorder(ids: number[]): Promise<Mutation<ValueRecord>>
+```
+
+Set tag display order from an ordered list of ids.
+
+#### Tag.update
+
+`stable` · since v0.12.0
+
+```ts
+Tag.update(updates: Patch<Tag>[]): Promise<Mutation<ValueRecord>>
+```
+
+Update tag display records in one undoable edit.
+
+#### Tag.visible
+
+`stable` · since v0.12.0
+
+```ts
+Tag.visible(): Tag[]
+```
+
+Tag records referenced by at least one location.
+
+## Tags
+
+### addPendingTag
+
+`stable` · since v0.12.2
+
+```ts
+addPendingTag(pending: PendingTags, name: string, tags: Tag[]): PendingTags
+```
+
+Stage typed text as the existing tag it names, ignoring case, or as a name to create.
+Returns `pending` unchanged if already staged.
+
+### displayTagName
+
+`stable` · since v0.10.3
+
+```ts
+displayTagName(name: string): string
+```
+
+Display label for a tag name. In tree view with `truncateTagPaths` on, collapses
+the `/`-path to its shortest unique suffix; otherwise returns the name verbatim.
+
+### pendingTagIds
+
+`stable` · since v0.12.2
+
+```ts
+pendingTagIds(props: PendingTags): Promise<number[]>
+```
+
+The tag ids pending tags save as, creating the typed names. A tag deleted meanwhile is left out.
+
+### sortTagsByMode
+
+`stable` · since v0.10.3
+
+```ts
+sortTagsByMode(
+  tags: Tag[],
+  mode: TagSortMode,
+  counts: Record<number, number>,
+): Tag[]
+```
+
+Sort tags by the chosen mode: name, location count, or manual order.
+
+### tagColorFor
+
+`stable` · since v0.10.3
+
+```ts
+tagColorFor(name: string, tags: Tag[]): string
+```
+
+Color for a tag named `name`. An existing tag uses its stored color.
+
+### togglePendingTag
+
+`stable` · since v0.12.2
+
+```ts
+togglePendingTag(pending: PendingTags, id: number): PendingTags
+```
+
+Stage the tag, or unstage it if it is already staged.
+
+## Toast
+
+### toast
+
+`stable` · since v0.6.1
+
+```ts
+toast(
+  message: string,
+  duration?: number,
+  container?: HTMLElement,
+): void
+```
+
+Show a brief toast notification. Optionally scoped to a `container` element.
+
+## Types
+
+### bboxTupleToBounds
+
+`unstable` · since v0.10.3
+
+```ts
+bboxTupleToBounds(t: [number, number, number, number] | null): Bounds | null
+```
+
+Convert a [west, south, east, north] bbox tuple to Bounds, or null.
+
+### boundsToScoreTuple
+
+`unstable` · since v0.10.3
+
+```ts
+boundsToScoreTuple(b: Bounds): [number, number, number, number]
+```
+
+Convert a Bounds object to a [south, west, north, east] tuple.
+
+### createFieldDef
+
+`stable` · since v0.10.2
+
+```ts
+createFieldDef(
+  type: FieldType,
+  over?: Partial<Omit<FieldDef, "type">>,
+): FieldDef
+```
+
+A field definition with every optional attribute spelled absent.
+
+### createLocation
+
+`stable` · since v0.3.1
+
+```ts
+createLocation(partial: Partial<Location> & LatLng): Location
+```
+
+Build a new Location from lat/lng plus overrides. Its `id` is 0, whatever the
+overrides hold; adding it to the map returns its real id.
+
+### dropLocation
+
+`unstable` · since v0.10.3
+
+```ts
+dropLocation(
+  source: Location,
+  live: PanoCapture,
+  panoId: string | null,
+  tagNames: string[],
+): {
+  location: Location;
+  records: {
+    tags: Record<number, ValueRecord>;
+  };
+}
+```
+
+A new Location at the viewer's live camera, carrying `source`'s flags, tagged `tagNames`
+through `records`, which the map it lands in matches to its own tags by name. `extra`
+describes the pano it was fetched for, so it only survives a drop that stayed on that
+pano.
+
+### isPinned
+
+`stable` · since v0.10.3
+
+```ts
+isPinned(loc: Location): loc is Location & {
+  panoId: string;
+}
+```
+
+Pinned: the location always opens this exact pano.
+
+### isWorldBounds
+
+`stable` · since v0.10.3
+
+```ts
+isWorldBounds(b: Bounds): boolean
+```
+
+True when bounds span the entire world.
+
+### locId
+
+`stable` · since v0.10.3
+
+```ts
+locId(m: MaybeLocation): number
+```
+
+Extract the id from a MaybeLocation.
+
+### scoreTupleToBounds
+
+`unstable` · since v0.10.3
+
+```ts
+scoreTupleToBounds(props: [number, number, number, number]): Bounds
+```
+
+Convert a [south, west, north, east] tuple to a Bounds object.
+
+### setPinned
+
+`stable` · since v0.10.7
+
+```ts
+setPinned(loc: Location, on: boolean): Location
+```
+
+The location pinned to the pano it carries, or unpinned to float on default coverage.
+
+## Ui
+
+### ui
+
+`stable` · since v0.6.1
+
+Shared UI primitives for plugin sidebars and dialogs.
+
+#### ui.Avatar
+
+`stable` · since v0.13.0
+
+```ts
+ui.Avatar(
+  props: ComponentPropsWithRef<"span"> & {
+    src?: string | null;
+    size?: number;
+    fallback?: ReactNode;
+    ring?: string;
+  },
+): react.JSX.Element
+```
+
+A round picture `size` pixels wide, showing `fallback` (a plain figure by default) when there is no `src` or it fails to load, ringed in `ring` when given.
+
+#### ui.Bar
+
+`stable` · since v0.11.1
+
+```ts
+ui.Bar(props: {
+  value: number;
+  size?: BarSize;
+  tone?: BarTone;
+  className?: string;
+}): react.JSX.Element
+```
+
+A bar filled to `value`, a share from 0 to 1.
+
+#### ui.Button
+
+`stable` · since v0.10.0
+
+```ts
+ui.Button(
+  props: ComponentPropsWithRef<"button"> & {
+    variant?: ButtonVariant;
+    small?: boolean;
+  },
+): react.JSX.Element
+```
+
+#### ui.Checkbox
+
+`stable` · since v0.10.0
+
+```ts
+ui.Checkbox(
+  props: Omit<ComponentPropsWithRef<"input">, "children"> & ChoiceLabelProps,
+): react.JSX.Element
+```
+
+A checkbox, with its label and hint beside it when given.
+
+#### ui.ColorPicker
+
+`stable` · since v0.10.0
+
+```ts
+ui.ColorPicker(props: {
+  color: RGB;
+  onChange: (color: RGB) => void;
+  ariaLabel?: string;
+}): react.JSX.Element
+```
+
+A color swatch that opens the picker in a popover on click.
+
+#### ui.ConfirmButton
+
+`unstable` · since v0.11.1
+
+```ts
+ui.ConfirmButton(
+  props: Omit<ComponentPropsWithRef<typeof Button>, "onClick"> & {
+    onConfirm: () => void;
+    /** The label while armed. Defaults to "Are you sure?". */
+    confirmLabel?: ReactNode;
+    /** An icon to show until the first click, with the button's text as its label. */
+    icon?: string;
+  },
+): react.JSX.Element
+```
+
+A button that asks "Are you sure?" on the first click and acts on the second. Moving focus
+away disarms it.
+
+#### ui.ConfirmDialog
+
+`unstable` · since v0.11.1
+
+```ts
+ui.ConfirmDialog(
+  props: DialogProps & {
+    title: string;
+    message: ReactNode;
+    confirmLabel: ReactNode;
+    cancelLabel?: ReactNode;
+    /** Destructive for an action that cannot be taken back. */
+    tone?: "primary" | "destructive";
+    /** Disables both buttons while the action runs. */
+    busy?: boolean;
+    size?: DialogSize;
+    onConfirm: () => void;
+    children?: ReactNode;
+  },
+): react.JSX.Element
+```
+
+Asks the user to confirm one action, with room for extra options under the message.
+
+#### ui.CoverageBar
+
+`stable` · since v0.11.1
+
+```ts
+ui.CoverageBar(props: {
+  ratio: number;
+  size?: BarSize;
+  status?: boolean;
+  className?: string;
+}): react.JSX.Element
+```
+
+Share of locations holding a value as a bar and a percentage, colored by whether every location is covered when `status` is set.
+
+#### ui.DatePicker
+
+`unstable` · since v0.10.0
+
+```ts
+ui.DatePicker(props: DatePickerProps): react.JSX.Element
+```
+
+#### ui.Dialog
+
+`unstable` · since v0.10.0
+
+```ts
+ui.Dialog(
+  props: Omit<ComponentProps<typeof Dialog$1.Root>, "onOpenChange"> & {
+    onOpenChange?: (open: boolean) => void;
+  },
+): react.JSX.Element
+```
+
+#### ui.DialogActions
+
+`unstable` · since v0.11.1
+
+```ts
+ui.DialogActions(props: {
+  /** Content held to the left: a summary, a meter, paging or secondary buttons. */
+  start?: ReactNode;
+  /** An action that destroys something, held to the far left. With `confirm` it asks "Are you
+   *  sure?" on the first click and acts on the second. */
+  destructive?: DialogAction & {
+    confirm?: boolean;
+  };
+  /** The dismiss button, labelled Cancel and closing the dialog unless told otherwise. */
+  cancel?: true | Partial<DialogAction>;
+  /** The action the dialog exists for, always rightmost. */
+  primary?: DialogAction & {
+    tone?: "primary" | "destructive";
+  };
+}): react.JSX.Element
+```
+
+A dialog's footer: side content on the left, then Cancel, then the main action on the right.
+
+#### ui.DialogContent
+
+`unstable` · since v0.10.0
+
+```ts
+ui.DialogContent(
+  props: ComponentProps<typeof Dialog$1.Popup> & {
+    title: string;
+    size?: DialogSize;
+    /** Shown in the header between the title and the close button, such as a status. */
+    aside?: ReactNode;
+  },
+): react.JSX.Element
+```
+
+#### ui.DialogForm
+
+`unstable` · since v0.11.1
+
+```ts
+ui.DialogForm(
+  props: Omit<ComponentPropsWithRef<"form">, "onSubmit"> & {
+    onSubmit: () => void;
+  },
+): react.JSX.Element
+```
+
+A dialog body laid out as a column that runs `onSubmit` when submitted, Enter included.
+
+#### ui.DialogTrigger
+
+`unstable` · since v0.10.0
+
+```ts
+ui.DialogTrigger<Payload>(
+  componentProps: DialogTriggerProps<Payload> & React.RefAttributes<HTMLElement>,
+): React.JSX.Element
+```
+
+A button that opens the dialog.
+Renders a `<button>` element.
+
+Documentation: [Base UI Dialog](https://base-ui.com/react/components/dialog)
+
+#### ui.EmptyState
+
+`stable` · since v0.6.1
+
+```ts
+ui.EmptyState(props: {
+  icon?: string;
+  compact?: boolean;
+  children: ReactNode;
+}): react.JSX.Element
+```
+
+A message for a panel or list with nothing to show, with an optional icon. `compact` fits it
+inline in a list.
+
+#### ui.Field
+
+`stable` · since v0.6.1
+
+```ts
+ui.Field(props: {
+  label: ReactNode;
+  hint?: ReactNode;
+  row?: boolean;
+  children: ReactNode;
+}): react.JSX.Element
+```
+
+Labelled form row (label left, control right) for sidebar sections.
+
+#### ui.Flag
+
+`stable` · since v0.10.0
+
+```ts
+ui.Flag(props: {
+  code: string | null;
+  height?: number;
+  className?: string;
+}): react.JSX.Element | null
+```
+
+Country flag from the bundled SVG set. Renders nothing for a missing or malformed code.
+
+#### ui.Hint
+
+`stable` · since v0.11.1
+
+```ts
+ui.Hint(props: {
+  tone?: "warning" | "error";
+  children?: ReactNode;
+}): react.JSX.Element
+```
+
+A line of secondary text, optionally marked as a warning or an error.
+
+#### ui.HotkeyInput
+
+`unstable` · since v0.10.0
+
+```ts
+ui.HotkeyInput(props: {
+  value: string;
+  onChange: (combo: string) => void;
+}): react.JSX.Element
+```
+
+Click-to-record key combo input. Backspace/Delete clears, Escape cancels.
+
+#### ui.Icon
+
+`stable` · since v0.10.0
+
+```ts
+ui.Icon(props: IconProps): react.JSX.Element
+```
+
+#### ui.IconButton
+
+`unstable` · since v0.11.1
+
+```ts
+ui.IconButton(
+  props: Omit<ComponentPropsWithRef<"button">, "aria-label" | "title"> & {
+    /** An icon path, or a drawn icon to show instead. */
+    icon: string | ReactNode;
+    /** What the button does, read aloud and shown as its tooltip. */
+    label: string;
+    /** The icon's size in pixels. */
+    size?: number;
+    /** Shows the button as pressed. */
+    active?: boolean;
+    /** Hides the button until its row is hovered or holds focus. */
+    reveal?: boolean;
+    /** Draws the button for use over map or street view imagery. */
+    overlay?: boolean;
+    /** The tooltip text, or false for none. Defaults to the label. */
+    tooltip?: string | false;
+    /** The side the tooltip opens on. */
+    tooltipSide?: "top" | "bottom" | "left" | "right";
+    /** Shown after the icon, such as a badge. */
+    children?: ReactNode;
+  },
+): react.JSX.Element
+```
+
+A button showing only an icon, named by its label.
+
+#### ui.Notice
+
+`stable` · since v0.11.1
+
+```ts
+ui.Notice(props: {
+  tone: "info" | "warning" | "error" | "success";
+  children: ReactNode;
+}): react.JSX.Element
+```
+
+A boxed message that informs, warns, reports an error or confirms a success.
+
+#### ui.NSelect
+
+`unstable` · since v0.10.0
+
+```ts
+ui.NSelect(
+  props: ComponentPropsWithRef<"select"> & {
+    compact?: boolean;
+    limited?: boolean;
+  },
+): react.JSX.Element
+```
+
+A dropdown. `compact` shrinks it to fit its value; `limited` caps the height of its option list.
+
+#### ui.ProgressRow
+
+`stable` · since v0.11.1
+
+```ts
+ui.ProgressRow(props: {
+  label: ReactNode;
+  count?: ReactNode;
+  value: number;
+  size?: BarSize;
+  className?: string;
+  children?: ReactNode;
+}): react.JSX.Element
+```
+
+A progress bar under its label and count, with any extra detail below it.
+
+#### ui.PromptDialog
+
+`unstable` · since v0.11.1
+
+```ts
+ui.PromptDialog(
+  props: DialogProps & {
+    title: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+    submitLabel: ReactNode;
+    /** Shown under the field. Pass null to keep its line reserved while there is no error. */
+    error?: ReactNode;
+    /** Whether the value can be submitted. Defaults to the value not being blank. */
+    canSubmit?: boolean;
+    /** Selects the whole value when the field gains focus. */
+    selectOnFocus?: boolean;
+    size?: DialogSize;
+    onSubmit: () => void;
+    /** Extra content between the field and the buttons. */
+    children?: ReactNode;
+  },
+): react.JSX.Element
+```
+
+Asks for one line of text, submitted with Enter or the submit button.
+
+#### ui.Radio
+
+`stable` · since v0.10.0
+
+```ts
+ui.Radio(
+  props: Omit<ComponentPropsWithRef<"input">, "children"> & ChoiceLabelProps,
+): react.JSX.Element
+```
+
+A radio button, with its label and hint beside it when given.
+
+#### ui.RgbPicker
+
+`unstable` · since v0.10.0
+
+```ts
+ui.RgbPicker(props: {
+  color: RGB;
+  onChange: (color: RGB) => void;
+}): react.JSX.Element
+```
+
+A color picker surface without a swatch. Takes and returns an `[r, g, b]` tuple, debounced.
+
+#### ui.Section
+
+`stable` · since v0.6.1
+
+```ts
+ui.Section(props: {
+  title: ReactNode;
+  defaultOpen?: boolean;
+  collapsible?: boolean;
+  addons?: ReactNode;
+  children: ReactNode;
+}): react.JSX.Element
+```
+
+Collapsible titled section inside a Sidebar.
+
+#### ui.SegmentedControl
+
+`stable` · since v0.6.1
+
+```ts
+ui.SegmentedControl<T extends string | number>(props: {
+  options: SegmentedOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  role?: "tabs" | "radio";
+  fill?: boolean;
+  className?: string;
+}): react.JSX.Element
+```
+
+Row of mutually exclusive option buttons. `role` is `"tabs"` when the options switch between
+panels and `"radio"` (the default) when they pick a value; `fill` stretches the options to
+equal widths across the row.
+
+#### ui.SelectorPicker
+
+`stable` · since v0.10.0
+
+```ts
+ui.SelectorPicker(props: {
+  ctl: SelectorPickController;
+  className?: string;
+}): react.JSX.Element
+```
+
+#### ui.SettingRow
+
+`unstable` · since v0.10.0
+
+```ts
+ui.SettingRow(
+  props: BoolRow | ControlRow | AutoBoolRow,
+): react.JSX.Element | null
+```
+
+#### ui.Sidebar
+
+`stable` · since v0.6.1
+
+```ts
+ui.Sidebar(props: {
+  title: ReactNode;
+  onBack?: () => void;
+  actions?: ReactNode;
+  className?: string;
+  flush?: boolean;
+  /** Stays pinned below the body while it scrolls, for the sidebar's main actions. */
+  footer?: ReactNode;
+  children: ReactNode;
+}): react.JSX.Element
+```
+
+Standard right-hand sidebar chrome (title, back button, scrollable body, pinned footer). Use for plugin sidebars.
+
+#### ui.Slider
+
+`stable` · since v0.10.0
+
+```ts
+ui.Slider(
+  props: ComponentPropsWithRef<"input"> & {
+    format?: (value: number) => ReactNode;
+  },
+): react.JSX.Element
+```
+
+A range input whose track fills up to its value, followed by the value itself when `format` is given.
+
+#### ui.Spinner
+
+`stable` · since v0.11.1
+
+```ts
+ui.Spinner(props: { size?: string; label?: string }): react.JSX.Element
+```
+
+A spinning ring shown while something loads. `size` is any length, such as `"10px"`.
+
+#### ui.SuggestInput
+
+`unstable` · since v0.10.0
+
+```ts
+ui.SuggestInput<T>(props: {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: T[];
+  onPick: (item: T) => void;
+  renderItem: (item: T) => ReactNode;
+  getKey: (item: T) => string | number;
+  placeholder?: string;
+  containerClassName?: string;
+  inputClassName?: string;
+  listClassName?: string;
+  itemClassName?: string;
+  listStyle?: CSSProperties;
+  autoFocus?: boolean;
+  disabled?: boolean;
+  /** When false, Enter closes the dropdown and falls through (e.g. to a form submit). */
+  pickOnEnter?: boolean;
+  /** Render the dropdown in a body portal, anchored to the input and following it as it
+   *  moves, so it floats over clipping ancestors like `.modal__content`. Clicks on it are
+   *  exempted from dialog outside-dismissal via the `suggest-portal` class (see DialogContent). */
+  portal?: boolean;
+}): react.JSX.Element
+```
+
+Text input with a suggestion dropdown. Enter picks the first suggestion; Escape or an
+outside click closes it. The dropdown shows whenever `suggestions` is non-empty, so
+filter or fetch them yourself. The class props restyle it.
+
+#### ui.Switch
+
+`stable` · since v0.10.0
+
+```ts
+ui.Switch(props: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  label?: string;
+}): react.JSX.Element
+```
+
+#### ui.SwitchRow
+
+`stable` · since v0.10.0
+
+```ts
+ui.SwitchRow(props: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  disabled?: boolean;
+  className?: string;
+  children?: ReactNode;
+}): react.JSX.Element
+```
+
+A compact row with a switch on the left. Clicking anywhere on the row toggles it.
+
+#### ui.TagPill
+
+`unstable` · since v0.10.0
+
+```ts
+ui.TagPill<E extends ElementType = "span">(
+  props: TagPillProps<E>,
+): react.JSX.Element
+```
+
+A tag shown as a pill in its color.
+
+#### ui.TagPillButton
+
+`unstable` · since v0.10.0
+
+```ts
+ui.TagPillButton(
+  props: ComponentPropsWithRef<"button"> & {
+    variant: TagPillButtonVariant;
+  },
+): react.JSX.Element
+```
+
+A leading button that adds, removes, edits, or toggles a tag.
+
+#### ui.TextInput
+
+`stable` · since v0.10.0
+
+```ts
+ui.TextInput(props: ComponentPropsWithRef<"input">): react.JSX.Element
+```
+
+#### ui.ToolBlock
+
+`unstable` · since v0.10.0
+
+```ts
+ui.ToolBlock(props: ToolBlockProps): react.JSX.Element
+```
+
+#### ui.Tooltip
+
+`stable` · since v0.10.0
+
+```ts
+ui.Tooltip(props: {
+  content: string;
+  side?: Side;
+  align?: Align;
+  children: ReactElement;
+}): ReactElement<Record<string, unknown>, string | react.JSXElementConstructor<any>>
+```
+
+Shows `content` as a tooltip when its child is hovered. The child is not wrapped.
+
+#### ui.useCloseDialog
+
+`unstable` · since v0.10.0
+
+```ts
+ui.useCloseDialog(): () => void
+```
+
+## Use job
+
+### useJob
+
+`stable` · since v0.10.0
+
+```ts
+useJob<R = unknown, P = never>(): Job<R, P>
+```
+
+User-triggered async work that reports progress and can be cancelled. Unmounting cancels.
+
+# Unstable surfaces
+
+Everything below can change in any release.
+
+## Color
+
+### colorForName
+
+`unstable` · since v0.10.3
+
+```ts
+colorForName(name: string): string
+```
+
+Deterministic tag color from a name.
+
+### hexToHsl
+
+`unstable` · since v0.10.3
+
+```ts
+hexToHsl(hex: string): HSL
+```
+
+Convert "#rrggbb" to HSL.
+
+### hexToRgb
+
+`unstable` · since v0.10.3
+
+```ts
+hexToRgb(hex: string): RGB
+```
+
+Parse "#rrggbb" or "#rgb" to an [r, g, b] byte tuple; black when it is not hex.
+
+### hslToHex
+
+`unstable` · since v0.10.3
+
+```ts
+hslToHex(props: HSL): string
+```
+
+Convert HSL to "#rrggbb".
+
+### hslToRgb
+
+`unstable` · since v0.10.3
+
+```ts
+hslToRgb(h: number, s: number, l: number): RGB
+```
+
+Convert HSL (h in degrees, s and l in 0-1) to an RGB byte tuple.
+
+### labelColor
+
+`unstable` · since v0.10.3
+
+```ts
+labelColor(name: string, overrides: Record<string, string>): string
+```
+
+A label's color: a user override if set, else a deterministic color from its name.
+
+### legible
+
+`unstable` · since v0.13.0
+
+```ts
+legible(color: RGB, background: RGB): RGB
+```
+
+`color` moved toward white on a dark `background`, or black on a light one, until the two
+reach WCAG AA contrast.
+
+### luminance
+
+`unstable` · since v0.13.0
+
+```ts
+luminance(rgb: RGB): number
+```
+
+WCAG relative luminance of a color, from 0 for black to 1 for white.
+
+### resolveSvColorHex
+
+`unstable` · since v0.10.3
+
+```ts
+resolveSvColorHex(color: string): string
+```
+
+Resolve an SV coverage color to hex. Accepts "#rrggbb" or a CSS custom-property
+ramp name (legacy stored format).
+
+### rgbCss
+
+`unstable` · since v0.10.3
+
+```ts
+rgbCss(props: RGB): string
+```
+
+Format an RGB tuple as a CSS `rgb(r, g, b)` string.
+
+### rgbToHex
+
+`unstable` · since v0.10.3
+
+```ts
+rgbToHex(rgb: RGB): string
+```
+
+Convert an RGB byte tuple to "#rrggbb".
+
+### textColorFor
+
+`unstable` · since v0.10.3
+
+```ts
+textColorFor(bg: string): string
+```
+
+Return "#000" or "#fff" for readable text on the given hex background.
+
+## Commands
+
+### cmd
+
+`unstable` · since v0.4.0
+
+Every backend command, typed. Any of them can change in a release.
+
+#### cmd.appReady
+
+`unstable` · since v0.5.2
+
+```ts
+cmd.appReady(): Promise<AppReady>
+```
+
+Reports the window ready and returns the app's startup time and uptime.
+
+#### cmd.borderLookup
+
+`unstable` · since v0.5.1
+
+```ts
+cmd.borderLookup(
+  lat: number,
+  lng: number,
+  level: string,
+): Promise<PolygonGeometry | null>
+```
+
+Return the border polygon containing (`lat`, `lng`) at the given detail
+`level`, or `null` if the point falls outside every feature.
+
+#### cmd.bulkImportCancel
+
+`unstable` · since v0.6.7
+
+```ts
+cmd.bulkImportCancel(): Promise<null>
+```
+
+Discard the previewed import without importing. Call when the user cancels the
+import dialog.
+
+#### cmd.bulkImportConfirm
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.bulkImportConfirm(
+  path: string,
+  selectedIndices: number[],
+): Promise<ImportedMapInfo[]>
+```
+
+Import the maps at `selectedIndices` from a previously previewed file.
+Emits `bulk-import-progress` per map.
+
+#### cmd.bulkImportPreview
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.bulkImportPreview(path: string): Promise<ImportPreviewEntry[]>
+```
+
+Parse a file (JSON or ZIP of JSONs) and return a preview of each map found,
+without persisting anything. Call `bulkImportConfirm` to import the maps.
+
+#### cmd.checkBorderFile
+
+`unstable` · since v0.5.0
+
+```ts
+cmd.checkBorderFile(level: string): Promise<boolean>
+```
+
+Whether the border dataset for `level` is available on disk.
+
+#### cmd.claimPluginUpdatePass
+
+`unstable` · since v0.10.5
+
+```ts
+cmd.claimPluginUpdatePass(): Promise<boolean>
+```
+
+True for the first caller per app run, which runs the background plugin update check.
+
+#### cmd.collabHost
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabHost(map: string): Promise<null>
+```
+
+Host map `map` for everyone it is shared with, until it is left.
+
+#### cmd.collabInvite
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabInvite(map: string, on: boolean): Promise<string | null>
+```
+
+Turn on the code that lets guests without a GitHub account join this app's shared map
+`map`, returning it, or turn it off, which turns away every guest in its session.
+
+#### cmd.collabJoin
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabJoin(via: Via, replace: boolean): Promise<JoinOutcome>
+```
+
+Join the map `via` reaches, as an account it is shared with or as a guest with an invite
+code, following it into this app's copy of it. A copy edited since its last session is
+reported instead, unless `replace` says to replace those edits.
+
+#### cmd.collabLeave
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabLeave(map: string): Promise<null>
+```
+
+Leave the session on this app's map `map`: a host ends it for everyone, a peer keeps its
+copy. An ended session is dismissed.
+
+#### cmd.collabPresent
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabPresent(map: string, data: Shown): Promise<null>
+```
+
+Show `data` to everyone else in the session on this app's map `map`.
+
+#### cmd.collabSessions
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabSessions(): Promise<CollabSessions>
+```
+
+Every collab session this app is in, and every map it copied from another app's.
+
+#### cmd.collabShare
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabShare(map: string, logins: string[]): Promise<null>
+```
+
+Share map `map` with exactly `logins`, or stop sharing it when there are none. Anyone left
+out is turned away from the map's session.
+
+#### cmd.collabShares
+
+`unstable` · since v0.13.0
+
+```ts
+cmd.collabShares(): Promise<Shares>
+```
+
+The maps the signed-in user shares, and the maps others share with them.
+
+#### cmd.discordPresenceSet
+
+`unstable` · since v0.7.6
+
+```ts
+cmd.discordPresenceSet(activity: PresenceActivity | null): Promise<null>
+```
+
+Set the Discord Rich Presence activity, or clear it when null. No-op when Discord is not running.
+
+#### cmd.downloadBorderFile
+
+`unstable` · since v0.5.0
+
+```ts
+cmd.downloadBorderFile(level: string): Promise<null>
+```
+
+Download the border dataset for `level` from the repository.
+
+#### cmd.feedbackLogTail
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.feedbackLogTail(): Promise<string>
+```
+
+The tail of `mma.log`, scrubbed. Empty string when there is no log yet.
+
+#### cmd.feedbackReply
+
+`unstable` · since v0.12.1
+
+```ts
+cmd.feedbackReply(
+  number: number,
+  token: string | null,
+  body: string,
+): Promise<IssueComment>
+```
+
+Reply on a report, with its reply token when it was filed anonymously or null when filed as the signed-in GitHub user.
+
+#### cmd.feedbackSubmit
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.feedbackSubmit(
+  title: string,
+  body: string,
+  installId: string | null,
+): Promise<ReportRef>
+```
+
+File a report anonymously under this install id, or as the signed-in GitHub user when it is null.
+
+#### cmd.feedbackThread
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.feedbackThread(number: number, token: string | null): Promise<IssueThread>
+```
+
+Fetch a report's state and replies, with its reply token when it was filed anonymously or null when filed as the signed-in GitHub user.
+
+#### cmd.feedbackUploadAttachment
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.feedbackUploadAttachment(path: string, name: string): Promise<AttachmentRef>
+```
+
+Upload an image attachment for a bug report and return its URL.
+
+#### cmd.fieldExprError
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.fieldExprError(src: string): Promise<ExprError | null>
+```
+
+The parse error for `src`, or `null` when it parses.
+
+#### cmd.fileSourceProbe
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.fileSourceProbe(address: string): Promise<FileSource>
+```
+
+Read the map file at a path or http(s) URL, to link a map to it.
+
+#### cmd.geoguessrLogin
+
+`unstable` · since v0.8.1
+
+```ts
+cmd.geoguessrLogin(): Promise<string>
+```
+
+Open the GeoGuessr sign-in window and wait for authentication to complete.
+Returns the signed-in nickname.
+
+#### cmd.geoguessrLogout
+
+`unstable` · since v0.8.1
+
+```ts
+cmd.geoguessrLogout(): Promise<null>
+```
+
+Sign out of GeoGuessr and clear the stored session.
+
+#### cmd.geoguessrMe
+
+`unstable` · since v0.8.1
+
+```ts
+cmd.geoguessrMe(): Promise<GgUser | null>
+```
+
+The signed-in user, or `null` when there is no session (or it was rejected).
+
+#### cmd.getDataLocation
+
+`unstable` · since v0.6.8
+
+```ts
+cmd.getDataLocation(): Promise<DataLocation>
+```
+
+Return the current and default data-folder paths, and whether a custom override is active.
+
+#### cmd.githubHasSession
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.githubHasSession(): Promise<boolean>
+```
+
+Local-only check: is a token stored? Says nothing about its validity.
+
+#### cmd.githubLogout
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.githubLogout(): Promise<null>
+```
+
+Sign out of GitHub and clear the stored session.
+
+#### cmd.githubMe
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.githubMe(): Promise<GhUser | null>
+```
+
+The signed-in user, or `null` when there is no session (or it was rejected).
+
+#### cmd.githubPollLogin
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.githubPollLogin(): Promise<GhUser>
+```
+
+Wait for the user to authorize the code from `githubStartLogin`.
+Resolves with the signed-in account.
+
+#### cmd.githubStartLogin
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.githubStartLogin(): Promise<DeviceCodeInfo>
+```
+
+Begin device-flow sign-in. Returns the code to show the user; call
+`githubPollLogin` afterwards to wait for them to finish authorizing.
+
+#### cmd.honeycombPoints
+
+`unstable` · since v0.11.0
+
+```ts
+cmd.honeycombPoints(
+  polygon: PolygonGeometry,
+  spacingM: number,
+): Promise<HoneycombRun[]>
+```
+
+The points of a honeycomb about `spacingM` metres apart that fall inside the polygon,
+one entry per row of points.
+
+#### cmd.installPlugin
+
+`unstable` · since v0.5.0
+
+```ts
+cmd.installPlugin(id: string, gitRef: string | null): Promise<PluginManifest>
+```
+
+Install a plugin from the marketplace: its manifest, main script, procedure module and sidecar.
+`gitRef` pins an older build; `null` installs the latest.
+
+#### cmd.listUserPlugins
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.listUserPlugins(): Promise<PluginManifest[]>
+```
+
+Manifests of every installed plugin.
+
+#### cmd.mapMakingCreateMap
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.mapMakingCreateMap(name: string): Promise<MmMapSummary>
+```
+
+Create an empty map named `name` for the stored key.
+
+#### cmd.mapMakingHasKey
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.mapMakingHasKey(): Promise<boolean>
+```
+
+Local-only check: is a key stored? Says nothing about its validity.
+
+#### cmd.mapMakingMaps
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.mapMakingMaps(): Promise<MmMapSummary[]>
+```
+
+Linkable maps for the stored key.
+
+#### cmd.mapMakingMe
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.mapMakingMe(): Promise<MmUser | null>
+```
+
+The account behind the stored key, or null when no key is stored.
+
+#### cmd.mapMakingSetKey
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.mapMakingSetKey(key: string | null): Promise<null>
+```
+
+Store the API key, or clear it with null.
+
+#### cmd.mapMakingValidate
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.mapMakingValidate(key: string): Promise<MmUser>
+```
+
+Check `key` against the remote without storing it.
+
+#### cmd.openDataFolder
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.openDataFolder(): Promise<null>
+```
+
+Open the app's data folder in the OS file explorer.
+
+#### cmd.openLogFile
+
+`unstable` · since v0.7.4
+
+```ts
+cmd.openLogFile(): Promise<null>
+```
+
+Open the app's log file in the OS default handler.
+
+#### cmd.parseMapsUrl
+
+`unstable` · since v0.10.7
+
+```ts
+cmd.parseMapsUrl(input: string): Promise<ParsedLocation | null>
+```
+
+The location a pasted Maps URL names, short links resolved.
+
+#### cmd.polygonBounds
+
+`unstable` · since v0.11.0
+
+```ts
+cmd.polygonBounds(
+  polygon: PolygonGeometry,
+): Promise<[number, number, number, number] | null>
+```
+
+Bounding box `[west, south, east, north]` of the polygon itself, or `null` when it
+has no vertices. `west > east` means the box crosses the antimeridian.
+
+#### cmd.polygonContainsPoints
+
+`unstable` · since v0.11.0
+
+```ts
+cmd.polygonContainsPoints(
+  polygon: PolygonGeometry,
+  lats: number[],
+  lngs: number[],
+): Promise<boolean[]>
+```
+
+Whether each of the points sits inside the polygon.
+
+#### cmd.polygonPoints
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.polygonPoints(
+  polygon: PolygonGeometry,
+  sampling: PointSampling,
+): Promise<[number, number][]>
+```
+
+Points inside the polygon as `[lng, lat]` pairs, drawn as `sampling` says.
+
+#### cmd.procedureActivity
+
+`unstable` · since v0.11.0
+
+```ts
+cmd.procedureActivity(): Promise<ProcedureActivity>
+```
+
+What the procedure engine is working on right now.
+
+#### cmd.procedureQuery
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.procedureQuery(
+  procedure: ProcedureDecl,
+  input: string,
+  runId: number | null,
+): Promise<string>
+```
+
+Run a procedure's read-only `query` export. `input` and the result are defined
+by the procedure module. A `runId` from `runReserve` streams partial results
+under it and lets `runCancel` stop the query.
+
+#### cmd.procedureRun
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.procedureRun(
+  items: RunItem[],
+  target: Target | null,
+  runId: number,
+): Promise<null>
+```
+
+Start a procedure run under a reserved id over an open map's locations, this window's unless
+the target names another. Returns at once, then emits `procedure-progress` and
+`procedure-result` as work completes.
+
+#### cmd.providerRegister
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.providerRegister(provider: ProviderDef): Promise<null>
+```
+
+Register a provider, replacing one with the same id.
+
+#### cmd.providerUnregister
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.providerUnregister(id: string): Promise<null>
+```
+
+Remove a registered provider.
+
+#### cmd.remoteApiRespond
+
+`unstable` · since v0.8.0
+
+```ts
+cmd.remoteApiRespond(id: number, ok: boolean, payload: string): Promise<void>
+```
+
+Deliver the result for remote API request `id`. `payload` is JSON text.
+
+#### cmd.remoteApiSet
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.remoteApiSet(key: string | null): Promise<null>
+```
+
+Start the remote API server with this key, re-keying it when already running, or stop it when the key is null.
+
+#### cmd.remoteMappingClear
+
+`unstable` · since v0.8.1
+
+```ts
+cmd.remoteMappingClear(provider: string, mapId: string): Promise<null>
+```
+
+Drop all mapping rows for a linked map (unlink).
+
+#### cmd.revealWindow
+
+`unstable` · since v0.10.6
+
+```ts
+cmd.revealWindow(maximized: boolean): Promise<void>
+```
+
+Show the window with the system open animation, maximized if `maximized` is set.
+
+#### cmd.reverseGeocode
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.reverseGeocode(lat: number, lng: number): Promise<GeoResult | null>
+```
+
+Return the nearest city, administrative region, and country for a coordinate.
+Never `null`: every landmass is covered.
+
+#### cmd.runCancel
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.runCancel(runId: number): Promise<null>
+```
+
+Stop a run. Work it already finished stays done, and a run that has ended ignores this.
+
+#### cmd.runReserve
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.runReserve(): Promise<number>
+```
+
+Reserve an id for a job before starting it, so the results it streams carry the id and
+`runCancel` can stop it.
+
+#### cmd.selectionBuild
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.selectionBuild(selections: SelectionInput[]): Promise<Selection[]>
+```
+
+Compile unaddressed selections into keyed store inputs.
+
+#### cmd.setDataLocation
+
+`unstable` · since v0.6.8
+
+```ts
+cmd.setDataLocation(path: string | null): Promise<null>
+```
+
+Set or clear the data-folder override. Takes effect after relaunch and does not
+move existing data.
+
+#### cmd.sidecarInstalledVersion
+
+`unstable` · since v0.7.0
+
+```ts
+cmd.sidecarInstalledVersion(pluginId: string): Promise<string | null>
+```
+
+Installed sidecar version for a plugin, or `null` if not installed.
+
+#### cmd.sidecarRequest
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.sidecarRequest(
+  pluginId: string,
+  command: string,
+  payload: string | null,
+  runId: number,
+): Promise<null>
+```
+
+Run one unit of work on a plugin's sidecar under a `runId` from `runReserve`. Commands the
+manifest lists under `serve` go to the plugin's resident process; the rest get a one-shot
+child, which `runCancel` kills. Streams `sidecar-line` (one JSON object per unit) and
+`sidecar-log` (stderr), then exactly one `sidecar-done`, all keyed by the run id.
+
+#### cmd.sidecarStop
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.sidecarStop(pluginId: string | null): Promise<null>
+```
+
+Stop all sidecar processes for a plugin, or for every plugin when the id is null.
+
+#### cmd.startupCheck
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.startupCheck(): Promise<null>
+```
+
+Fails with the reason the app could not start, and succeeds when it started normally.
+
+#### cmd.storeCheckoutCommit
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeCheckoutCommit(
+  mapId: string,
+  commitId: string,
+): Promise<Mutation<Location> | null>
+```
+
+Restore a map to a previous commit. An open map changes through its normal write path;
+a closed one is rewritten on disk and returns null.
+
+#### cmd.storeCloseLayer
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeCloseLayer(name: string, mapId: string | null): Promise<null>
+```
+
+Close a pending layer. Edits not yet landed are discarded; work still writing to a landed layer finishes first.
+
+#### cmd.storeCloseMap
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeCloseMap(): Promise<null>
+```
+
+Close the open map, saving unsaved changes first.
+
+#### cmd.storeCommit
+
+`unstable` · since v0.6.5
+
+```ts
+cmd.storeCommit(mapId: string, message: string | null): Promise<CommitResult>
+```
+
+Commit the map's uncommitted changes. Returns the new commit ID. Clears undo/redo.
+
+#### cmd.storeCopyLocationsToMap
+
+`unstable` · since v0.6.0
+
+```ts
+cmd.storeCopyLocationsToMap(
+  targetMapId: string,
+  selector: Selector$1<SelectionInput>,
+): Promise<CopyToMapResult>
+```
+
+Copy the locations that `selector` matches into another map, skipping ones it already has.
+Extra fields carry over, and interned values such as tags are matched to the target's by name.
+
+#### cmd.storeCountryDistribution
+
+`unstable` · since v0.5.2
+
+```ts
+cmd.storeCountryDistribution(
+  selector: Selector$1<SelectionInput>,
+  level: string,
+): Promise<[string, number][]>
+```
+
+Count locations by country using offline point-in-polygon. Returns (ISO-A2, count) pairs.
+`level` selects border precision, falling back to "light" if unavailable.
+
+#### cmd.storeCreateMap
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeCreateMap(name: string, folder: string | null): Promise<MapMeta>
+```
+
+Create a new empty map with the preferences new maps start from. Returns the full metadata.
+
+#### cmd.storeDbStats
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeDbStats(): Promise<DbStats>
+```
+
+Return aggregate database statistics: counts, file size, and configuration.
+
+#### cmd.storeDeleteMap
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeDeleteMap(id: string): Promise<null>
+```
+
+Delete a map and all its data permanently.
+
+#### cmd.storeDeleteSavedSelection
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.storeDeleteSavedSelection(id: string): Promise<null>
+```
+
+Delete a saved selection rule by `id`.
+
+#### cmd.storeDuplicateMap
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.storeDuplicateMap(id: string, name: string): Promise<MapMeta>
+```
+
+Copy a map, uncommitted edits included, into a new map named `name`. Version history,
+edit history, sync links, and review sessions stay with the original.
+
+#### cmd.storeEdit
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeEdit<V extends Edits>(edits: V): Promise<ReplyTo<Edited, V>>
+```
+
+Edit the map; an open pending layer holds location edits until it lands.
+
+#### cmd.storeExport
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeExport(
+  selector: Selector$1<SelectionInput>,
+  format: ExportFormat,
+): Promise<string>
+```
+
+Write the selected locations to a temporary file in `format` and return its path.
+
+#### cmd.storeExportBulkZip
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeExportBulkZip(): Promise<string>
+```
+
+Export every map as a ZIP of JSON files. Duplicate map names get a numeric suffix.
+Emits `bulk-export-progress` per map.
+
+#### cmd.storeGetCommitDelta
+
+`unstable` · since v0.5.1
+
+```ts
+cmd.storeGetCommitDelta(mapId: string, commitId: string): Promise<Change<Location>>
+```
+
+Read a single commit's change: the locations it added, removed and updated.
+
+#### cmd.storeGetMapDefaults
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.storeGetMapDefaults(): Promise<MapPreferences | null>
+```
+
+The preferences new maps start from, or `null` when they start from the factory defaults.
+
+#### cmd.storeGetSavedSelections
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.storeGetSavedSelections(ids: string[]): Promise<SavedSelection[]>
+```
+
+Fetch the full saved selection rules for the given `ids`, including their selector trees.
+
+#### cmd.storeImportCancel
+
+`unstable` · since v0.11.3
+
+```ts
+cmd.storeImportCancel(): Promise<null>
+```
+
+Discard the staged import without importing it.
+
+#### cmd.storeImportFile
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeImportFile(
+  droppedFields: string[],
+  tagNames: string[],
+  droppedTags: string[],
+): Promise<EditorImportResult>
+```
+
+Import the staged file, dropping chosen fields and tags and applying each supplied tag to every location.
+
+#### cmd.storeImportLegacySavedSelections
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.storeImportLegacySavedSelections(json: string): Promise<number>
+```
+
+Import saved selections kept in local storage by older versions. No-op when
+rules already exist. Returns the number of rules imported.
+
+#### cmd.storeImportPreview
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeImportPreview(source: ImportSource): Promise<EditorImportPreview>
+```
+
+Parse a file or pasted text, stage it, and return field-level statistics and preview
+positions for the editor import dialog. Call `storeImportFile` to commit the import.
+
+#### cmd.storeLandLayer
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeLandLayer(name: string): Promise<Mutation<Location>>
+```
+
+Land a pending layer's edits on the map as one undoable step; later edits to it join that
+step.
+
+#### cmd.storeListCommits
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeListCommits(mapId: string): Promise<CommitInfo[]>
+```
+
+List all commits for a map, newest first.
+
+#### cmd.storeListMaps
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeListMaps(): Promise<MapMeta[]>
+```
+
+Return metadata for every map in the database.
+
+#### cmd.storeListSavedSelections
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.storeListSavedSelections(): Promise<SavedSelectionInfo[]>
+```
+
+List every saved selection rule (name, color, date), without their selector trees.
+
+#### cmd.storeMoveFolder
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeMoveFolder(from: string, to: string | null): Promise<null>
+```
+
+Move every map in folder `from` (and its subfolders) to `to`, or to the root when `to` is null.
+
+#### cmd.storeOpenMap
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeOpenMap(
+  mapId: string,
+  changes: Channel<ChangeEvent>,
+): Promise<StoreStatus>
+```
+
+Open a map, deliver its later changes on `changes`, and return its initial state
+(per-value counts, metadata, undo/redo availability). The scratch map is created on its
+first open. Must be called before any other store commands.
+
+#### cmd.storeRead
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeRead(
+  target: Target,
+  selectors: Selector$1<SelectionInput>[],
+  ask: Ask,
+): Promise<Answer[]>
+```
+
+Answer one question about the target's locations matched by each selector, in order.
+
+#### cmd.storeReviewEdit
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeReviewEdit(
+  edits: Op<
+    ReviewSession,
+    Partial<
+      Omit<
+        ReviewSession,
+        "mapId" | "sourceKey" | "sourceProps" | "createdAt" | "updatedAt"
+      >
+    > &
+      Pick<ReviewSession, "id">,
+    string
+  >[],
+): Promise<ReviewSession[]>
+```
+
+Add, replace, patch or remove review sessions together. Returns each added session as
+stored, in order.
+
+#### cmd.storeReviewList
+
+`unstable` · since v0.5.2
+
+```ts
+cmd.storeReviewList(
+  mapId: string,
+  status: string | null,
+  sourceKey: string | null,
+): Promise<ReviewSession[]>
+```
+
+List review sessions for a map, newest first, optionally only those with `status` and `sourceKey`.
+
+#### cmd.storeSaveDirty
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSaveDirty(): Promise<null>
+```
+
+Save uncommitted changes to disk. No-op when nothing has changed.
+
+#### cmd.storeSaveExportFile
+
+`unstable` · since v0.5.2
+
+```ts
+cmd.storeSaveExportFile(srcPath: string, destPath: string): Promise<null>
+```
+
+Move a temp export file to `destPath` and remove the temp source.
+
+#### cmd.storeSaveSelection
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.storeSaveSelection(
+  name: string,
+  selector: Selector$1<SelectionInput>,
+  color: RGB,
+): Promise<SavedSelection>
+```
+
+Save a new selection rule.
+
+#### cmd.storeSeenClear
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSeenClear(): Promise<null>
+```
+
+Deletes all seen history entries.
+
+#### cmd.storeSeenCountries
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSeenCountries(): Promise<string[]>
+```
+
+Return all distinct country codes in the seen history, sorted alphabetically.
+
+#### cmd.storeSeenList
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSeenList(
+  limit: number,
+  offset: number,
+  filter: SeenFilter | null,
+  thumbnails: boolean,
+): Promise<SeenPage>
+```
+
+Returns a page of seen entries, newest first, and the number of entries matching the filter.
+
+#### cmd.storeSeenMaps
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSeenMaps(): Promise<SeenMapInfo[]>
+```
+
+Returns all distinct maps that have seen entries, with resolved display names.
+
+#### cmd.storeSeenWrite
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeSeenWrite(entry: SeenWriteEntry): Promise<null>
+```
+
+Record a panorama visit. The history is capped; oldest entries are evicted when full.
+
+#### cmd.storeSetMapDefaults
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.storeSetMapDefaults(preferences: MapPreferences | null): Promise<null>
+```
+
+Set the preferences new maps start from; `null` restores the factory defaults. Maps
+that already exist keep their own.
+
+#### cmd.storeStep
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeStep(
+  stack: Stack,
+  timeline: Timeline,
+): Promise<Mutation<Location>>
+```
+
+Undo the newest edit, or redo the newest undone one.
+
+#### cmd.storeSubscribeFrames
+
+`unstable` · since v0.11.5
+
+```ts
+cmd.storeSubscribeFrames(
+  frames: Channel<ArrayBuffer>,
+  req: RenderRequest,
+): Promise<null>
+```
+
+Draw the open map's markers: `frames` receives the whole scene, then every change to it.
+
+#### cmd.storeUpdateMapMeta
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.storeUpdateMapMeta(
+  patch: Partial<
+    Omit<
+      MapMeta,
+      | "locationCount"
+      | "pending"
+      | "createdAt"
+      | "updatedAt"
+      | "lastOpenedAt"
+      | "settings"
+      | "localPluginData"
+    >
+  > &
+    Pick<MapMeta, "id"> & {
+      settings?: Partial<Omit<MapSettings, keyof MapPreferences | "pluginData">> &
+        Partial<MapPreferences> & {
+          pluginData?: {
+            [key in string]: Op<
+              { [key_1 in string]: unknown },
+              { [key_1 in string]: Op<unknown, unknown, null> },
+              null
+            >;
+          };
+        };
+    } & {
+      localPluginData?: {
+        [key in string]: Op<
+          { [key_1 in string]: unknown },
+          { [key_1 in string]: Op<unknown, unknown, null> },
+          null
+        >;
+      };
+    },
+): Promise<Mutation<Location> | null>
+```
+
+Patch map metadata, leaving omitted fields unchanged.
+Open maps save through their store; value records are edited separately.
+A closed map writes straight to disk and returns null.
+
+#### cmd.storeUploadAbort
+
+`unstable` · since v0.7.4
+
+```ts
+cmd.storeUploadAbort(sessionDir: string): Promise<null>
+```
+
+Remove an abandoned upload session dir (e.g. cancelled operation).
+
+#### cmd.storeUploadBegin
+
+`unstable` · since v0.7.4
+
+```ts
+cmd.storeUploadBegin(): Promise<string>
+```
+
+Create a temp session directory for binary uploads. Files written into it are
+packaged by `storeUploadFinish`.
+
+#### cmd.storeUploadFinish
+
+`unstable` · since v0.7.4
+
+```ts
+cmd.storeUploadFinish(sessionDir: string): Promise<string>
+```
+
+Package an upload session's files into a single output and remove the session
+directory. Returns a temp path for `storeSaveExportFile`.
+
+#### cmd.storeWork
+
+`unstable` · since v0.12.0
+
+```ts
+cmd.storeWork(
+  target: Target,
+  selector: Selector$1<SelectionInput>,
+  work: Work,
+): Promise<WorkResult>
+```
+
+Run work over the target's locations matched by selector; an open pending layer holds the
+edits until it lands.
+
+#### cmd.syncLogAppend
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.syncLogAppend(
+  provider: string,
+  mapId: string,
+  entry: SyncLogEntry,
+): Promise<null>
+```
+
+Record a settled sync pass for a map. Only the most recent passes per provider are kept.
+
+#### cmd.syncLogList
+
+`unstable` · since v0.11.4
+
+```ts
+cmd.syncLogList(provider: string, mapId: string): Promise<SyncLogEntry[]>
+```
+
+A map's recorded sync passes with a provider, newest first.
+
+#### cmd.syncReconcile
+
+`unstable` · since v0.8.1
+
+```ts
+cmd.syncReconcile(
+  provider: string,
+  mapId: string,
+  remoteMapId: string,
+  firstSync: FirstSyncMode | null,
+  resolutions: [string, ResolutionSide][] | null,
+): Promise<SyncReconcileResult>
+```
+
+Reconcile a linked map against its remote, pushing local changes and pulling
+remote ones. Returns the creates, updates, and deletes for each side to apply.
+
+#### cmd.timezoneAt
+
+`unstable` · since v0.10.6
+
+```ts
+cmd.timezoneAt(lat: number, lng: number): Promise<string | null>
+```
+
+IANA timezone at a coordinate, or `null` outside the valid range.
+
+#### cmd.uninstallPlugin
+
+`unstable` · since v0.5.0
+
+```ts
+cmd.uninstallPlugin(id: string): Promise<null>
+```
+
+Delete a plugin's directory.
+
+#### cmd.updateCheck
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.updateCheck(endpoint: string): Promise<UpdateAvailable | null>
+```
+
+Check for an update at `endpoint` (a release's `latest.json`). Returns `null`
+when the announced version is not newer than the running one.
+
+#### cmd.updateInstall
+
+`unstable` · since v0.10.0
+
+```ts
+cmd.updateInstall(): Promise<null>
+```
+
+Download and install whatever the last `updateCheck` found. The installer replaces the
+running app, so nothing after this is guaranteed to run. Save state first.
+
+#### cmd.valiDataStatus
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.valiDataStatus(): Promise<ValiCountryStatus[]>
+```
+
+Countries whose downloaded coverage data is older than the published copy. Fails while
+offline; treat that as unknown, not up to date.
+
+#### cmd.valiDownload
+
+`unstable` · since v0.7.0
+
+```ts
+cmd.valiDownload(
+  country: string | null,
+  full: boolean,
+  updates: boolean,
+  runId: number | null,
+): Promise<null>
+```
+
+Download Vali coverage data for a country code or continent alias, or for every country
+when `country` is null. A `runId` from `runReserve` lets `runCancel` stop it.
+
+#### cmd.valiDownloadStale
+
+`unstable` · since v0.9.0
+
+```ts
+cmd.valiDownloadStale(runId: number | null): Promise<null>
+```
+
+Download exactly the countries `valiDataStatus` reports as out of date. No-op when nothing
+is stale, so the caller can fire it without checking first. A `runId` from `runReserve`
+lets `runCancel` stop it.
+
+#### cmd.valiGenerate
+
+`unstable` · since v0.7.0
+
+```ts
+cmd.valiGenerate(
+  definition: string,
+  runId: number | null,
+): Promise<ValiLocation[]>
+```
+
+Generate locations from a Vali map definition (JSON text). Missing country data is
+auto-downloaded like the Vali CLI. A `runId` from `runReserve` lets `runCancel` stop it.
+
+#### cmd.writeTempFile
+
+`unstable` · since v0.4.0
+
+```ts
+cmd.writeTempFile(name: string, content: string): Promise<string>
+```
+
+Write text to a temp file and return its path. `name` is a leaf filename
+(cannot contain path separators).
+
+## Commit diff
+
+### CommitDiff
+
+`unstable` · since v0.12.0
+
+Uncommitted changes and their preview on the map.
+
+#### CommitDiff.begin
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.begin(commit: CommitInfo): Promise<void>
+```
+
+Fetch a commit's change and overlay its added/removed/updated locations on the map,
+temporarily replacing the regular markers.
+
+#### CommitDiff.end
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.end(): void
+```
+
+Leave commit-diff preview and restore the regular markers.
+
+#### CommitDiff.has
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.has(): boolean
+```
+
+Whether there are uncommitted changes (adds, removes, or updates).
+
+#### CommitDiff.positions
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.positions(locs: LatLng[]): Float32Array
+```
+
+Pack `[lng, lat]` pairs into an interleaved Float32Array.
+
+#### CommitDiff.preview
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.preview(): CommitDiffPreview | null
+```
+
+The current commit-diff preview, or null when not previewing.
+
+#### CommitDiff.reset
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.reset(): void
+```
+
+Clear commit-diff preview state.
+
+#### CommitDiff.use
+
+`unstable` · since v0.12.0
+
+```ts
+CommitDiff.use(): Counts
+```
+
+React hook: the uncommitted add/remove/modify counts.
+
+## Download
+
+### downloadBlob
+
+`unstable` · since v0.10.3
+
+```ts
+downloadBlob(blob: Blob, fileName: string): void
+```
+
+Trigger a browser download from an in-memory Blob.
+
+## Import
+
+### Import
+
+`unstable` · since v0.12.0
+
+Stage, preview, and confirm an import into the open map.
+
+#### Import.cancel
+
+`unstable` · since v0.12.0
+
+```ts
+Import.cancel(): void
+```
+
+Discard the staged import without committing.
+
+#### Import.confirm
+
+`unstable` · since v0.12.0
+
+```ts
+Import.confirm(
+  droppedFields: string[],
+  tagNames?: string[],
+  droppedTags?: string[],
+): Promise<EditorImportResult | null>
+```
+
+Import the staged file, dropping chosen fields and tags and applying bulk tags.
+
+#### Import.fromPath
+
+`unstable` · since v0.12.0
+
+```ts
+Import.fromPath(path: string): Promise<void>
+```
+
+Import from a file path.
+
+#### Import.paste
+
+`unstable` · since v0.12.0
+
+```ts
+Import.paste(text: string): Promise<void>
+```
+
+Stage pasted text for preview. Throws if no locations are found.
+
+#### Import.previewPositions
+
+`unstable` · since v0.12.0
+
+```ts
+Import.previewPositions(): Float32Array<ArrayBufferLike>
+```
+
+The preview marker positions for the staged import.
+
+#### Import.reset
+
+`unstable` · since v0.12.0
+
+```ts
+Import.reset(): void
+```
+
+Discard the staged import and its pending layer.
+
+#### Import.staging
+
+`unstable` · since v0.12.0
+
+```ts
+Import.staging(): ImportStaging | null
+```
+
+The current staged import, or null if none.
+
+## Jobs
+
+### cancelJobs
+
+`unstable` · since v0.10.7
+
+```ts
+cancelJobs(scope: JobScope): void
+```
+
+Cancel every live job of `scope` that can be cancelled. Owners observe their own
+abort and end their jobs; entries without a cancel are removed outright.
+
+### getJobs
+
+`unstable` · since v0.10.7
+
+```ts
+getJobs(): JobEntry[]
+```
+
+Live jobs, for the tray. Reference changes on every update.
+
+### registerJob
+
+`unstable` · since v0.10.7
+
+```ts
+registerJob(label: string, opts?: JobOpts): JobHandle
+```
+
+Register a long-running operation with the global job tray. The caller owns the
+work; the registry owns only its presentation and the cancel/reveal controls.
+
+### runJob
+
+`unstable` · since v0.10.7
+
+```ts
+runJob<R>(
+  label: string,
+  fn: (ctx: JobRunContext) => Promise<R>,
+  opts?: Omit<JobOpts, "cancel">,
+): Promise<Settled<R>>
+```
+
+Sugar for promise-shaped work: registers a job wired to an AbortController, reports
+through the handle, ends the job however `fn` settles, and resolves to how it settled.
+A failure also toasts.
+
+## Layer
+
+### Layer
+
+`unstable` · since v0.12.0
+
+A pending layer. Operations run in order; work still writing to a landed layer outlives close.
+
+#### Layer.open
+
+`unstable` · since v0.12.0
+
+```ts
+Layer.open(edits?: LocationEdits): Promise<Layer>
+```
+
+Create a layer and stage its first edits.
+
+## Map host
+
+### MapHost
+
+`unstable` · since v0.12.0
+
+The embedded map host, its preferences, and click interceptors.
+
+#### MapHost.addClickInterceptor
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.addClickInterceptor(fn: ClickInterceptor): () => void
+```
+
+Register a map-click interceptor. Returns a removal function. The most recently
+added interceptor that returns true consumes the click.
+
+#### MapHost.create
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.create(
+  kind: MapHostKind,
+  container: HTMLElement,
+  prefs: MapEmbedPrefs,
+  opts: CreateHostOpts,
+): Promise<MapHost>
+```
+
+#### MapHost.each
+
+`unstable` · since v0.13.0
+
+```ts
+MapHost.each(attach: (host: MapHost) => () => void): () => void
+```
+
+Run `attach` on the main editor map host and on every host that replaces it, undoing each
+run with what it returns once its host goes. Returns the stop.
+
+#### MapHost.fitToBounds
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.fitToBounds(
+  bounds: Bounds | null,
+  padding?: number,
+  minExtent?: number,
+): void
+```
+
+Fit the editor map's viewport to `bounds`. A `minExtent` prevents over-zoom on tiny areas.
+
+#### MapHost.get
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.get(): MapHost | null
+```
+
+Return the main editor map host, or null if not mounted.
+
+#### MapHost.instance
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.instance<K extends MapHostKind>(
+  host: MapHost | null,
+  kind: K,
+): HostInstances[K] | null
+```
+
+The raw engine instance if `host` is of the given kind, else null.
+
+#### MapHost.kindForMapType
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.kindForMapType(mapType: MapTypeKey): MapHostKind
+```
+
+#### MapHost.set
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.set(host: MapHost | null): void
+```
+
+Set or clear the main editor map host.
+
+#### MapHost.setDrawInterceptor
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.setDrawInterceptor(fn: DrawInterceptor | null): void
+```
+
+Set the callback for completed polygon draws. Null clears it.
+
+#### MapHost.tryInterceptClick
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.tryInterceptClick(lat: number, lng: number, shiftKey?: boolean): boolean
+```
+
+Run registered click interceptors (newest first). True if one consumed the click.
+
+#### MapHost.tryInterceptDraw
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.tryInterceptDraw(rings: number[][][]): boolean
+```
+
+Pass completed polygon rings to the draw interceptor. True if it consumed them.
+
+#### MapHost.wait
+
+`unstable` · since v0.12.0
+
+```ts
+MapHost.wait(): Promise<MapHost>
+```
+
+Wait for the main editor map to be ready.
+
+## Pano
+
+### Pano
+
+`unstable` · since v0.12.0
+
+The app's default pano viewer.
+
+#### Pano.applyLock
+
+`unstable` · since v0.13.0
+
+```ts
+Pano.applyLock(): Promise<void>
+```
+
+Turn the camera to the locked view on the current pano.
+
+#### Pano.canvas
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.canvas(): HTMLCanvasElement | null
+```
+
+The live WebGL scene canvas, or null before the first render.
+
+#### Pano.capture
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.capture(): PanoCapture | null
+```
+
+The viewer read back into Location fields, or null until it has a position.
+
+#### Pano.captureImage
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.captureImage(width: number, height: number): HTMLCanvasElement | null
+```
+
+Cover-crop the live frame into an exact image, or null until real imagery renders.
+
+#### Pano.captureView
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.captureView(): LocationPOV
+```
+
+The camera in the stored zoom domain, zeroed without a viewer.
+
+#### Pano.configure
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.configure(options: google.maps.StreetViewPanoramaOptions): void
+```
+
+Apply display options to the viewer.
+
+#### Pano.dispose
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.dispose(): void
+```
+
+Release the viewer, its container and every listener; the instance is unusable afterwards.
+
+#### Pano.exists
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.exists(): boolean
+```
+
+Whether the viewer has been created.
+
+#### Pano.faceRoad
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.faceRoad(): void
+```
+
+Face the linked road nearest the camera heading.
+
+#### Pano.hide
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.hide(): void
+```
+
+Hide the viewer.
+
+#### Pano.isLoaded
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.isLoaded(): boolean
+```
+
+Whether the viewer has finished loading its current pano.
+
+#### Pano.jump
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.jump(to: PanoDestination, frame?: PanoFrame): void
+```
+
+Move to a pano id or position now, optionally setting the camera, overtaking pending requests.
+
+#### Pano.jumpAhead
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.jumpAhead(headingOffset: number): Promise<boolean>
+```
+
+Jump to the nearest official pano ahead of the camera, turned by `headingOffset` degrees.
+
+#### Pano.links
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.links(): google.maps.StreetViewLink[]
+```
+
+The current pano's navigable links.
+
+#### Pano.lockedView
+
+`unstable` · since v0.13.0
+
+```ts
+Pano.lockedView():
+  | (CameraFrame & {
+      zoom?: number;
+    } & {
+      zoom: number;
+    })
+  | null
+```
+
+The view held relative to each pano's camera frame while the viewport is locked, or null.
+
+#### Pano.mount
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.mount(target: HTMLElement): () => void
+```
+
+Parent the viewer into a container; the newest mount wins until released.
+
+#### Pano.nudge
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.nudge(dHeading: number, dPitch: number): void
+```
+
+Nudge heading and pitch by a delta, keeping pitch in range.
+
+#### Pano.on
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.on(event: PanoEvent, fn: () => void): () => void
+```
+
+Listen to a viewer event, across viewer rebuilds; returns an unsubscribe.
+
+#### Pano.panoId
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.panoId(): string | null
+```
+
+The current pano id, or null before one loads.
+
+#### Pano.pointNorth
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.pointNorth(): void
+```
+
+Face north keeping the pitch, or look straight down zoomed out when already within two degrees of north.
+
+#### Pano.position
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.position(): google.maps.LatLngLiteral | null
+```
+
+The current pano's position, or null before one loads.
+
+#### Pano.pov
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.pov(): CameraFrame
+```
+
+The camera heading and pitch.
+
+#### Pano.preload
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.preload(loc: Location): Promise<void>
+```
+
+Stage a location's pano while nothing newer is pending, so a later show is instant.
+
+#### Pano.reload
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.reload(fallback: google.maps.LatLngLiteral): void
+```
+
+Rebuild a stuck viewer in place, keeping its pano and camera.
+
+#### Pano.reserveLook
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.reserveLook(): (frame: PanoFrame) => boolean
+```
+
+Reserve a camera move across an async wait; it lands only if nothing moved the pano since.
+
+#### Pano.resetZoom
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.resetZoom(): void
+```
+
+Zoom fully out.
+
+#### Pano.show
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.show(
+  loc: Location,
+  props?: {
+    concealUntilReady?: boolean;
+  },
+): Promise<Ok<string | null> | Cancelled>
+```
+
+Resolve and show a location's pano, optionally hidden until it loads; cancelled when overtaken. The value is the pano put on screen, null when sent to coordinates.
+
+#### Pano.showCrosshair
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.showCrosshair(): () => void
+```
+
+Draw the crosshair over the viewer; returns a remove.
+
+#### Pano.snapshot
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.snapshot(): PanoView
+```
+
+Freeze the live camera for an offscreen render; throws until a pano is ready.
+
+#### Pano.step
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.step(direction: "forward" | "backward"): boolean
+```
+
+Step to the linked pano nearest the camera heading, or its reverse.
+
+#### Pano.toast
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.toast(message: string, durationMs: number): void
+```
+
+Show a toast anchored over the viewer.
+
+#### Pano.toggleLock
+
+`unstable` · since v0.13.0
+
+```ts
+Pano.toggleLock(): Promise<boolean>
+```
+
+Lock the viewport to the current view, or release the lock. True when it is now locked.
+
+#### Pano.turnAround
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.turnAround(): void
+```
+
+Turn to face the opposite direction.
+
+#### Pano.turnTo
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.turnTo(target: CameraFrame): void
+```
+
+Animate the camera to a frame, replacing any turn in progress.
+
+#### Pano.turnToNextLink
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.turnToNextLink(): void
+```
+
+Turn to the next linked road clockwise from the camera.
+
+#### Pano.zoom
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.zoom(): number
+```
+
+The viewer's display zoom.
+
+#### Pano.zoomIn
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.zoomIn(): void
+```
+
+Step the zoom in.
+
+#### Pano.zoomOut
+
+`unstable` · since v0.12.0
+
+```ts
+Pano.zoomOut(): void
+```
+
+Step the zoom out.
+
+#### Pano.zoomScale
+
+`unstable` · since v0.13.0
+
+```ts
+Pano.zoomScale: {
+  range: { min: -3; max: 4 };
+  display: (stored: number) => number;
+  stored: (display: number) => number;
+  in: (z: number) => number;
+  out: (z: number) => number;
+}
+```
+
+The viewer's zoom scale: stored against display zoom, and its steps.
+
+## Providers
+
+### BUILTIN_PROVIDERS
+
+`unstable` · since v0.12.0
+
+```ts
+BUILTIN_PROVIDERS: readonly Provider<unknown, unknown>[]
+```
+
+The providers the app registers at startup.
+
+### enrich
+
+`unstable` · since v0.10.3
+
+```ts
+enrich(
+  selector: Selector,
+  props?: RunOpts & {
+    resolve?: boolean;
+  },
+): Promise<ProcedureOutcomes>
+```
+
+Enrich the locations in `selector` with every enrichment field the open map has on,
+resolving their panoramas first unless `resolve` is false.
+
+### enrichRuns
+
+`unstable` · since v0.10.3
+
+```ts
+enrichRuns(
+  enrichFields: string[] | null,
+  exclude?: string[],
+): ProviderRun[]
+```
+
+Build the provider run list for enrichment, narrowed to `enrichFields` and the fields they
+read. Fields not offered in the enrichment settings are always included.
+
+### exactDateProvider
+
+`unstable` · since v0.10.3
+
+```ts
+exactDateProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<unknown, unknown>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Exact capture timestamp, narrowed from the `imageDate` month via binary search.
+
+### headingRoadProvider
+
+`unstable` · since v0.12.0
+
+```ts
+headingRoadProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<unknown, HeadingRoadConfig>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Pan a location's heading along the road. The driving direction is the pano's
+`centerHeading`; "forwards" faces it, "backwards" faces the opposite.
+
+### panoResolveProvider
+
+`unstable` · since v0.10.3
+
+```ts
+panoResolveProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<{ panoId: string }, PanoResolveConfig>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Pano-resolve provider for enrichment. Writes the `panoId` field and runs before any
+provider that depends on it. Rows that already have a pano id are skipped unless the
+run is forced.
+
+### subdivisionProvider
+
+`unstable` · since v0.10.3
+
+```ts
+subdivisionProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<unknown, unknown>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Subdivision (adm1) via offline point-in-polygon against the local border dataset.
+No Google dependency; downloads the adm1 archive on first use.
+
+### svMetaProvider
+
+`unstable` · since v0.10.3
+
+```ts
+svMetaProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<unknown, unknown>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Core panorama metadata via Google's GetMetadata RPC.
+
+### timezoneProvider
+
+`unstable` · since v0.10.3
+
+```ts
+timezoneProvider: {
+  id: string;
+  /** Name shown in enrichment progress and results. */
+  label: string;
+  /** The procedure that computes this provider's fields. */
+  procedure: ProcedureSpec<unknown, unknown>;
+  /** Extra-field keys this provider produces. Each is offered as an enrichment option. */
+  fieldDefs: Record<string, FieldDef> | undefined;
+  /** Leaves this provider's fields out of the default enrichment set, so users opt in. */
+  defaultOff: boolean | undefined;
+  /** Core columns this provider writes (e.g. `panoId`). */
+  provides: string[] | undefined;
+  /** Fields this provider reads; it runs after their producers finish. */
+  requires: string[] | undefined;
+}
+```
+
+Timezone at the location's coordinates. Requires `datetime` to be present.
+
+### validateLocations
+
+`unstable` · since v0.4.0
+
+```ts
+validateLocations(
+  selector: Selector,
+  opts?: BulkOpts & {
+    config?: Partial<ValidateConfig>;
+    categories?: readonly string[];
+  },
+): Promise<ValidationOutcome>
+```
+
+Check that each location's Street View coverage still exists, grouping the locations
+into `categories` (keys of `VALIDATION_CATEGORIES`; the standard ones when omitted).
+
+## Review
+
+### Review
+
+`unstable` · since v0.12.0
+
+Review sessions and their history.
+
+#### Review.advance
+
+`unstable` · since v0.12.0
+
+```ts
+Review.advance(s: ReviewSession): {
+  session: ReviewSession;
+  done: boolean;
+}
+```
+
+Mark the current cursor reviewed and step forward. `done` is true when the
+session has no remaining items.
+
+#### Review.appendNewMatches
+
+`unstable` · since v0.12.2
+
+```ts
+Review.appendNewMatches(): Promise<void>
+```
+
+Append the new matches to the end of the worklist, in the map's review order.
+
+#### Review.begin
+
+`unstable` · since v0.12.0
+
+```ts
+Review.begin(ids: number[], source?: Selection): Promise<void>
+```
+
+Start or resume a review over `ids`. When `source` is a selection, re-reviewing
+that selection resumes any in-progress session for it.
+
+#### Review.beginSelected
+
+`unstable` · since v0.12.0
+
+```ts
+Review.beginSelected(): Promise<void>
+```
+
+Review the selected locations. With one active selection, the review belongs to it and
+resumes with it.
+
+#### Review.cancel
+
+`unstable` · since v0.12.0
+
+```ts
+Review.cancel(): void
+```
+
+Exit the review UI but keep the session resumable (persisted as active).
+
+#### Review.deleteCurrent
+
+`unstable` · since v0.12.0
+
+```ts
+Review.deleteCurrent(): Promise<void>
+```
+
+Delete the current location and advance to the next one. Exits the pass if it
+was the last item.
+
+#### Review.ids
+
+`unstable` · since v0.12.0
+
+```ts
+Review.ids(s: ReviewSession, mode: ReviewMode): number[]
+```
+
+The session's locations in `mode`: those reviewed, or those still to review.
+
+#### Review.index
+
+`unstable` · since v0.12.0
+
+```ts
+Review.index(s: ReviewSession): number
+```
+
+Position of the session cursor within its review order.
+
+#### Review.isAtEnd
+
+`unstable` · since v0.12.0
+
+```ts
+Review.isAtEnd(s: ReviewSession): boolean
+```
+
+True when the cursor is on the session's last location.
+
+#### Review.isAtStart
+
+`unstable` · since v0.12.0
+
+```ts
+Review.isAtStart(s: ReviewSession): boolean
+```
+
+True when the cursor is on the session's first location.
+
+#### Review.isCurrentReviewed
+
+`unstable` · since v0.12.0
+
+```ts
+Review.isCurrentReviewed(s: ReviewSession): boolean
+```
+
+Current cursor location is in the reviewed set.
+
+#### Review.next
+
+`unstable` · since v0.12.0
+
+```ts
+Review.next(): Promise<void>
+```
+
+Mark the current location reviewed and step to the next one.
+
+#### Review.positionOf
+
+`unstable` · since v0.12.0
+
+```ts
+Review.positionOf(s: ReviewSession, id: number): number
+```
+
+Position of `id` in the session's worklist, or -1. O(1) per step.
+
+#### Review.prev
+
+`unstable` · since v0.12.0
+
+```ts
+Review.prev(): Promise<void>
+```
+
+Step back to the previous location in the session.
+
+#### Review.prune
+
+`unstable` · since v0.12.0
+
+```ts
+Review.prune(s: ReviewSession, removed: Set<number>): PruneResult
+```
+
+Remove `removed` ids from a session's worklist and reviewed set. Advances the
+cursor when the cursor id itself was removed.
+
+#### Review.removeSession
+
+`unstable` · since v0.12.0
+
+```ts
+Review.removeSession(id: string): Promise<void>
+```
+
+Delete a review session (its progress, not the locations).
+
+#### Review.rename
+
+`unstable` · since v0.12.0
+
+```ts
+Review.rename(id: string, name: string): Promise<void>
+```
+
+Rename a review session.
+
+#### Review.resume
+
+`unstable` · since v0.12.0
+
+```ts
+Review.resume(s: ReviewSession, currentMatches?: number[]): Promise<void>
+```
+
+Make a saved session the active one, dropping locations that no longer exist. Given
+the selection's current matches, any its worklist lacks are offered as new matches.
+
+#### Review.retreat
+
+`unstable` · since v0.12.0
+
+```ts
+Review.retreat(s: ReviewSession): ReviewSession | null
+```
+
+Step backward without marking anything reviewed. Null when already at the start.
+
+#### Review.reviewedIds
+
+`unstable` · since v0.12.0
+
+```ts
+Review.reviewedIds(sessions: ReviewSession[]): number[]
+```
+
+Union of reviewed ids across sessions, de-duplicated.
+
+#### Review.selector
+
+`unstable` · since v0.12.0
+
+```ts
+Review.selector(s: ReviewSession, mode: ReviewMode): Selector
+```
+
+The locations of review session `s` that are reviewed, or still to review.
+
+#### Review.selectReviewed
+
+`unstable` · since v0.12.0
+
+```ts
+Review.selectReviewed(): Promise<void>
+```
+
+Select every location marked reviewed across all sessions on this map.
+
+#### Review.session
+
+`unstable` · since v0.12.0
+
+```ts
+Review.session(): ReviewSession | null
+```
+
+The active review session, or null.
+
+#### Review.sessions
+
+`unstable` · since v0.12.0
+
+```ts
+Review.sessions(status?: "active" | "done"): Promise<ReviewSession[]>
+```
+
+Review sessions for the open map, optionally filtered by status.
+
+#### Review.useNewMatches
+
+`unstable` · since v0.12.2
+
+```ts
+Review.useNewMatches(): number[]
+```
+
+Reactive new matches of the active session's selection, not yet in its worklist.
+
+#### Review.useSession
+
+`unstable` · since v0.12.0
+
+```ts
+Review.useSession(): ReviewSession | null
+```
+
+Reactive active review session, or null.
+
+## Saved selection
+
+### SavedSelection
+
+`unstable` · since v0.12.0
+
+Saved selection rules.
+
+#### SavedSelection.apply
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.apply(saved: SavedSelection): number
+```
+
+Adds the rule's parts to the sidebar, resolved against the open map. Returns how many
+were added.
+
+#### SavedSelection.index
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.index(): SavedSelectionInfo[]
+```
+
+The rules that exist, as identity only. Empty until the index loads: the first
+call starts the read and `saved-selections:changed` announces it.
+
+#### SavedSelection.isSaveable
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.isSaveable(selector: Selector): boolean
+```
+
+Whether the selector tree contains only portable types (no map-local leaves).
+
+#### SavedSelection.load
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.load(ids: string[]): Promise<SavedSelection[]>
+```
+
+Load the full rule bodies for the given `ids`.
+
+#### SavedSelection.loadAll
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.loadAll(): Promise<SavedSelection[]>
+```
+
+Every rule with its body.
+
+#### SavedSelection.MAP_LOCAL_TYPES
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.MAP_LOCAL_TYPES: readonly [
+  "Locations",
+  "Manual",
+  "Validation",
+  "Reviewed",
+  "Selected",
+]
+```
+
+Selection types that cannot be saved as rules because they are bound to the open map.
+
+#### SavedSelection.parts
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.parts(saved: SavedSelection): SavedPart[]
+```
+
+A rule's parts: its top-level `Union` is the list it was saved from, anything else is
+a single part.
+
+#### SavedSelection.remove
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.remove(id: string): Promise<void>
+```
+
+Permanently delete a saved selection rule.
+
+#### SavedSelection.save
+
+`unstable` · since v0.12.0
+
+```ts
+SavedSelection.save(name: string, selections: Selection[]): Promise<boolean>
+```
+
+Persists the saveable selections as one rule. False when none of them are saveable.
+
+## Scene
+
+### Scene
+
+`unstable` · since v0.12.0
+
+The marker scene the map surfaces render from, and its load lifecycle.
+
+#### Scene.clear
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.clear(): void
+```
+
+Clear all marker data from the scene and stop following the map.
+
+#### Scene.defaultColor
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.defaultColor(): RGBA
+```
+
+Current default marker color as RGBA.
+
+#### Scene.get
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.get(): CellManager
+```
+
+The shared scene that all map surfaces render from.
+
+#### Scene.load
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.load(markerStyle?: MarkerStyle, mc?: RGB): Promise<void>
+```
+
+Load the whole scene again and follow every change to it from there.
+
+#### Scene.loading
+
+`unstable` · since v0.13.0
+
+```ts
+Scene.loading: { hold: () => () => void; held: () => boolean }
+```
+
+What keeps the map showing as loading; the scene itself holds it until its markers are first drawn.
+
+#### Scene.positions
+
+`unstable` · since v0.13.0
+
+```ts
+Scene.positions(): {
+  ids: Uint32Array;
+  positions: Float32Array;
+}
+```
+
+Snapshot of every rendered location's id and position (`[lng, lat, ...]`).
+
+#### Scene.reached
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.reached(version: number): Promise<FrameSummary>
+```
+
+Resolves once the scene has applied the frame for map version `version`, with what that
+frame did. Resolves at once, with nothing applied, when the scene follows no map.
+
+#### Scene.recolor
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.recolor(mc: RGB): void
+```
+
+Change the default marker color and repaint.
+
+#### Scene.selected
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.selected(): SelectedIds
+```
+
+The ids of the locations the listed selections select.
+
+#### Scene.setDefaultColor
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.setDefaultColor(r: number, g: number, b: number): void
+```
+
+Set the default marker color (RGB bytes).
+
+#### Scene.settled
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.settled(): Promise<void>
+```
+
+Resolves when the most recently started full scene load has finished (or immediately if none is in flight).
+
+#### Scene.useSelected
+
+`unstable` · since v0.12.0
+
+```ts
+Scene.useSelected(): SelectedIds
+```
+
+Reactive Scene.selected.
+
+## Seen
+
+### Seen
+
+`unstable` · since v0.12.0
+
+The seen-location history and how panorama visits are recorded into it.
+
+#### Seen.clear
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.clear(): Promise<void>
+```
+
+Delete the entire seen history. Not undoable.
+
+#### Seen.countries
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.countries(): Promise<string[]>
+```
+
+Distinct country codes that appear in the seen history.
+
+#### Seen.flush
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.flush(viewer: PanoViewer): void
+```
+
+Write the pending seen entry to disk, if any.
+
+#### Seen.list
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.list(
+  limit?: number,
+  offset?: number,
+  filter?: SeenFilter,
+  thumbnails?: boolean,
+): Promise<SeenPage>
+```
+
+A page of the seen (visited-panorama) history and how many entries match the filter.
+
+#### Seen.loadPano
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.loadPano(entry: SeenPano, viewer: PanoViewer): Promise<void>
+```
+
+Open a seen entry's panorama in the Street View viewer.
+
+#### Seen.maps
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.maps(): Promise<SeenMapInfo[]>
+```
+
+Maps that have seen-history entries.
+
+#### Seen.onMap
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.onMap(
+  list: readonly Pick<SeenPano, "locationId" | "panoId">[],
+): Promise<(Location | null)[]>
+```
+
+The map location each entry was seen at, while it still shows the entry's pano; null otherwise.
+
+#### Seen.panoChanged
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.panoChanged(
+  location: PendingEntryLocation,
+  geo: GeoDisplay | null,
+  viewer: PanoViewer,
+): void
+```
+
+Record a panorama change for the seen history. Flushes the previous entry and stages the new one.
+
+#### Seen.record
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.record(
+  location: PendingEntryLocation & LocationPOV,
+  viewer: PanoViewer,
+): Promise<void>
+```
+
+Record a pano visit now at its starting view, with a thumbnail if that view is still on screen once imagery arrives.
+
+#### Seen.skipNext
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.skipNext(panoId: string): void
+```
+
+Suppress the next seen-history entry for `panoId`.
+
+#### Seen.updateGeo
+
+`unstable` · since v0.12.0
+
+```ts
+Seen.updateGeo(geo: GeoDisplay): void
+```
+
+Update the pending seen entry's geocode info (country, address).
+
+## Selection list
+
+### SelectionList
+
+`unstable` · since v0.12.0
+
+Change the listed selections and inspect their active members.
+
+#### SelectionList.active
+
+`unstable` · since v0.12.0
+
+```ts
+SelectionList.active(): Selection[]
+```
+
+Listed selections that are not ghosted.
+
+#### SelectionList.listed
+
+`unstable` · since v0.12.1
+
+```ts
+SelectionList.listed(): ListedSelection[]
+```
+
+The listed selections, in list order.
+
+#### SelectionList.select
+
+`unstable` · since v0.12.0
+
+```ts
+SelectionList.select<
+  R extends
+    | number[]
+    | {
+        ids: number[];
+      },
+>(
+  pick: (selector: Selector) => Promise<R>,
+  perSelection?: boolean,
+): Promise<{
+  picked: number;
+  results: R[];
+}>
+```
+
+#### SelectionList.tagIds
+
+`unstable` · since v0.12.0
+
+```ts
+SelectionList.tagIds(): ReadonlySet<number>
+```
+
+Tag ids with a top-level listed tag selection, including ghosted selections.
+
+#### SelectionList.tagIdsDeep
+
+`unstable` · since v0.12.0
+
+```ts
+SelectionList.tagIdsDeep(): readonly number[]
+```
+
+Tag ids from active selection leaves, including repeated ids and composite children.
+
+## Selections
+
+### addSelection
+
+`unstable` · since v0.4.0
+
+```ts
+addSelection(...selectors: Selector[]): SelectionOp
+```
+
+### all
+
+`unstable` · since v0.11.0
+
+```ts
+all(...selectors: Selector[]): Selector
+```
+
+Locations matching every one of `selectors`; with none, every location.
+
+### any
+
+`unstable` · since v0.11.0
+
+```ts
+any(...selectors: Selector[]): Selector
+```
+
+Locations matching any of `selectors`; with none, no location.
+
+### buildSelection
+
+`unstable` · since v0.10.3
+
+```ts
+buildSelection(selector: Selector): Promise<Selection>
+```
+
+### childSelections
+
+`unstable` · since v0.10.5
+
+```ts
+childSelections<S>(selector: Selector$1<S>): S[]
+```
+
+Every child selection a selector wraps, whatever shape it wraps them in.
+
+### filterIsLocalTime
+
+`unstable` · since v0.10.3
+
+```ts
+filterIsLocalTime(test: FilterOp): boolean
+```
+
+Whether a predicate reads the location's clock in its own timezone. Only a range can.
+
+### has
+
+`unstable` · since v0.11.0
+
+```ts
+has(field: string): Selector
+```
+
+Locations holding a value for `field`.
+
+### lacks
+
+`unstable` · since v0.11.0
+
+```ts
+lacks(field: string): Selector
+```
+
+Locations holding no value for `field`.
+
+### memberOf
+
+`unstable` · since v0.12.2
+
+```ts
+memberOf(selector: Selector): {
+  field: string;
+  id: number;
+} | null
+```
+
+The interned value a selector tests membership of, or null when it tests something else.
+The single place that recognises value membership, so nothing else has to know its shape.
+
+### not
+
+`unstable` · since v0.11.0
+
+```ts
+not(selector: Selector): Selector
+```
+
+Locations not matching `selector`.
+
+### OP_LABELS
+
+`unstable` · since v0.10.3
+
+```ts
+OP_LABELS: Record<
+  | "between"
+  | "between_anytime"
+  | "between_anyyear"
+  | "contains"
+  | "eq"
+  | "gt"
+  | "gte"
+  | "has"
+  | "lt"
+  | "lte"
+  | "neq"
+  | "notcontains"
+  | "nothas",
+  string
+>
+```
+
+Display symbol/word for each filter operator. Symbols are language-neutral; only the worded
+operators are marked for translation.
+
+### panoIdSelector
+
+`unstable` · since v0.11.1
+
+```ts
+panoIdSelector(on: boolean): Selector
+```
+
+Locations pinned to one exact pano (the flag plus a pano id), or the locations not
+pinned.
+
+### replaceSelection
+
+`unstable` · since v0.10.3
+
+```ts
+replaceSelection(path: SelectionPath, selector: Selector): SelectionOp
+```
+
+### selection
+
+`unstable` · since v0.12.0
+
+```ts
+selection(selector: Selector, color?: RGB): SelectionInput
+```
+
+An unaddressed selection input; the store supplies its key and default color.
+
+### selectionAt
+
+`unstable` · since v0.11.3
+
+```ts
+selectionAt(
+  rows: ListedSelection[],
+  path: SelectionPath,
+): Selection | undefined
+```
+
+### selectionDisplayName
+
+`unstable` · since v0.10.3
+
+```ts
+selectionDisplayName(sel: SelectionInput, valueNames?: ValueNames): string
+```
+
+Human-readable label for a selection. Pass `valueNames` to resolve interned values by
+saved name rather than the open map's records.
+
+### SELECTIONS
+
+`unstable` · since v0.10.3
+
+```ts
+SELECTIONS: {
+  Duplicates: SelectionDescriptor<"Duplicates">;
+  EvenlySpaced: SelectionDescriptor<"EvenlySpaced">;
+  Everything: SelectionDescriptor<"Everything">;
+  Filter: SelectionDescriptor<"Filter">;
+  Intersection: SelectionDescriptor<"Intersection">;
+  Invert: SelectionDescriptor<"Invert">;
+  Locations: SelectionDescriptor<"Locations">;
+  Manual: SelectionDescriptor<"Manual">;
+  Nearby: SelectionDescriptor<"Nearby">;
+  Nearest: SelectionDescriptor<"Nearest">;
+  Polygon: SelectionDescriptor<"Polygon">;
+  Ranked: SelectionDescriptor<"Ranked">;
+  Reviewed: SelectionDescriptor<"Reviewed">;
+  Sample: SelectionDescriptor<"Sample">;
+  Selected: SelectionDescriptor<"Selected">;
+  Spaced: SelectionDescriptor<"Spaced">;
+  Uncommitted: SelectionDescriptor<"Uncommitted">;
+  Union: SelectionDescriptor<"Union">;
+  Validation: SelectionDescriptor<"Validation">;
+}
+```
+
+The display label of each selector variant.
+
+### tagIdOf
+
+`unstable` · since v0.11.1
+
+```ts
+tagIdOf(selector: Selector): number | null
+```
+
+The tag a selector names, or null when it names something else.
+
+### tagSelector
+
+`unstable` · since v0.11.1
+
+```ts
+tagSelector(tagId: number): Selector
+```
+
+Locations carrying `tagId`. A tag is membership in the `tags` list field and nothing
+else, so there is no tag selector to build.
+
+### toggleSelection
+
+`unstable` · since v0.11.3
+
+```ts
+toggleSelection(...selectors: Selector[]): SelectionOp
+```
+
+### UNARY_TYPES
+
+`unstable` · since v0.10.3
+
+```ts
+UNARY_TYPES: readonly ["Invert"]
+```
+
+### unpannedSelector
+
+`unstable` · since v0.11.1
+
+```ts
+unpannedSelector(): Selector
+```
+
+Locations whose heading was never set.
+
+### untaggedSelector
+
+`unstable` · since v0.11.1
+
+```ts
+untaggedSelector(): Selector
+```
+
+Locations with no tags: `tags` resolves to nothing on an untagged location.
+
+### withChildren
+
+`unstable` · since v0.10.5
+
+```ts
+withChildren<S>(selector: Selector$1<S>, children: S[]): Selector$1<S>
+```
+
+`selector` with its children replaced, keeping the shape it wraps them in.
+
+## Selector pick
+
+### selectorForPick
+
+`unstable` · since v0.10.0
+
+```ts
+selectorForPick(choice: SelectorPick): Selector
+```
+
+Convert a picker choice into the corresponding `Selector`.
+
+### useSelectorPick
+
+`unstable` · since v0.10.0
+
+```ts
+useSelectorPick(initial?: SelectorPick): SelectorPickController
+```
+
+React hook: selector state with live counts. Defaults to the current selection when one
+exists, else all locations.
+
+## Settings
+
+### APP_SETTINGS
+
+`unstable` · since v0.10.3
+
+```ts
+APP_SETTINGS: PersistedStore<{
+  showCameraBadges: boolean;
+  showLinksControl: boolean;
+  clickToGo: boolean;
+  showRoadLabels: boolean;
+  defaultMovementMode: MovementMode;
+  showCar: boolean;
+  showCrosshair: boolean;
+  showCompass: boolean;
+  showCompassTape: boolean;
+  showZoom: boolean;
+  showReturnToSpawn: boolean;
+  showJumpButtons: boolean;
+  showMapLinks: boolean;
+  showCoordinateDisplay: boolean;
+  showFullscreenButton: boolean;
+  showScreenshotButton: boolean;
+  showPanoMetadata: boolean;
+  exactDateFormat: ExactDateFormat;
+  dateTimezone: DateTimezone;
+  showNavArrow: boolean;
+  showGroundArrow: boolean;
+  hidePanoUI: boolean;
+  hideNavWithUI: boolean;
+  fullscreenMap: boolean;
+  showFullscreenMapMeta: boolean;
+  showFullscreenMiniLocationPreview: boolean;
+  fullscreenMiniLocationScale: number;
+  showFullscreenMinimap: boolean;
+  fullscreenMinimapScale: number;
+  fullscreenMinimapCloseDelay: number;
+  showFullscreenTagbar: boolean;
+  showFullscreenDatePicker: boolean;
+  showFullscreenReviewBar: boolean;
+  showFullscreenGeocode: boolean;
+  customCss: string;
+  enableSeen: boolean;
+  enableSeenThumbnails: boolean;
+  seenResolution: SeenResolution;
+  mapPanSpeed: number;
+  panoLookSpeed: number;
+  slowModifier: number;
+  showFps: boolean;
+  mapListFields: MapListField[];
+  hiddenMapBadges: string[];
+  language: Language;
+  units: UnitSystem;
+  restoreSession: boolean;
+  appZoom: number;
+  prereleaseUpdates: boolean;
+  discordPresence: DiscordPresenceMode;
+  labelColors: Record<string, string>;
+  geocodeProvider: GeocodeProvider;
+  nominatimApiKey: string;
+  panToImported: boolean;
+  enterOpensCenter: boolean;
+  pastePadding: number;
+  followOpenInReview: boolean;
+  markerColor: RGB;
+  openLocationColor: RGB;
+  importPreviewColor: RGB;
+  svTrail: boolean;
+  svTrailColor: RGB;
+  svTrailPosition: boolean;
+  panoDotColor: RGB;
+  opacityToggleMode: OpacityToggleMode;
+  polygonColorMode: PolygonColorMode;
+  polygonColor: RGB;
+  panoDotScaled: boolean;
+  tagViewMode: TagViewMode;
+  truncateTagPaths: boolean;
+  tagFolderColorMode: TagFolderColorMode;
+  tagFolderColor: RGB;
+  tagSortMode: TagSortMode;
+  tagGap: number;
+  borderDetail: BorderDetail;
+  subdivisionDetail: SubdivisionDetail;
+  previewAspectRatio: PreviewAspectRatio;
+  tagSuggestionLimit: number;
+  remoteApi: boolean;
+  remoteApiKey: string;
+  pinnedCommands: PinnedEntry[];
+}>
+```
+
+localStorage descriptor for the persisted settings object.
+
+### BORDER_ARCHIVE_BYTES
+
+`unstable` · since v0.10.3
+
+```ts
+BORDER_ARCHIVE_BYTES: {
+  readonly medium: 7460312;
+  readonly heavy: 21514464;
+  readonly adm1: 56891952;
+}
+```
+
+Download size of each border detail level, in bytes.
+
+### BORDER_DETAILS
+
+`unstable` · since v0.10.3
+
+```ts
+BORDER_DETAILS: {
+  readonly light: "Standard (bundled)";
+  readonly medium: "High ({size})";
+  readonly heavy: "Ultra ({size})";
+}
+```
+
+### DATE_TIMEZONES
+
+`unstable` · since v0.10.3
+
+```ts
+DATE_TIMEZONES: { readonly location: "Location timezone"; readonly utc: "UTC" }
+```
+
+### DEFAULTS
+
+`unstable` · since v0.10.3
+
+```ts
+DEFAULTS: {
+  showCameraBadges: boolean;
+  showLinksControl: boolean;
+  clickToGo: boolean;
+  showRoadLabels: boolean;
+  defaultMovementMode: "moving" | "nmpz" | "no-move";
+  showCar: boolean;
+  showCrosshair: boolean;
+  showCompass: boolean;
+  showCompassTape: boolean;
+  showZoom: boolean;
+  showReturnToSpawn: boolean;
+  showJumpButtons: boolean;
+  showMapLinks: boolean;
+  showCoordinateDisplay: boolean;
+  showFullscreenButton: boolean;
+  showScreenshotButton: boolean;
+  showPanoMetadata: boolean;
+  exactDateFormat: "date" | "datetime";
+  dateTimezone: "location" | "utc";
+  showNavArrow: boolean;
+  showGroundArrow: boolean;
+  hidePanoUI: boolean;
+  /** Hiding the pano UI also hides navigation: link arrows, ground arrow, click-to-go X. */
+  hideNavWithUI: boolean;
+  fullscreenMap: boolean;
+  showFullscreenMapMeta: boolean;
+  showFullscreenMiniLocationPreview: boolean;
+  fullscreenMiniLocationScale: number;
+  showFullscreenMinimap: boolean;
+  fullscreenMinimapScale: number;
+  /** Milliseconds the fullscreen minimap stays expanded after the pointer leaves it. */
+  fullscreenMinimapCloseDelay: number;
+  showFullscreenTagbar: boolean;
+  showFullscreenDatePicker: boolean;
+  showFullscreenReviewBar: boolean;
+  showFullscreenGeocode: boolean;
+  customCss: string;
+  enableSeen: boolean;
+  enableSeenThumbnails: boolean;
+  seenResolution: "high" | "low" | "medium";
+  mapPanSpeed: number;
+  panoLookSpeed: number;
+  slowModifier: number;
+  showFps: boolean;
+  mapListFields: ("created" | "lastOpened" | "locationCount")[];
+  /** Ids of map-row badge sources that are hidden. */
+  hiddenMapBadges: string[];
+  /** Read once at boot; changing it relaunches the app rather than re-rendering. */
+  language: "de" | "en" | "en-XA" | "es" | "fr" | "ja" | "pl" | "ru" | "zh-Hans";
+  /** Every distance the UI shows or accepts; stored values stay metric. */
+  units: "auto" | "imperial" | "metric";
+  /** Reopen the maps that were open when the session last ended (main window closed). */
+  restoreSession: boolean;
+  /** Zoom factor of every window's UI, set by the app zoom hotkeys. */
+  appZoom: number;
+  /** Offer pre-release builds to the updater as well as full releases. */
+  prereleaseUpdates: boolean;
+  /** Discord Rich Presence: off, generic (no map name), or full (map name + count). */
+  discordPresence: "full" | "generic" | "off";
+  /** Per-label color overrides (hex), keyed by lowercased label name. Shared across all maps. */
+  labelColors: Record<string, string>;
+  geocodeProvider: "google" | "local" | "nominatim";
+  nominatimApiKey: string;
+  panToImported: boolean;
+  /** With no location open, Enter shows a center crosshair and opens the location under it. */
+  enterOpensCenter: boolean;
+  /** Smallest half-width, in degrees, the map frames around a single pasted or imported point. */
+  pastePadding: number;
+  followOpenInReview: boolean;
+  markerColor: RGB;
+  openLocationColor: RGB;
+  importPreviewColor: RGB;
+  svTrail: boolean;
+  svTrailColor: RGB;
+  svTrailPosition: boolean;
+  panoDotColor: RGB;
+  /** What the layer opacity hotkeys restore a layer to when toggling it back on. */
+  opacityToggleMode: "full" | "previous";
+  /** Initial color mode for newly drawn polygon selections. Recoloring by hand overrides either mode. */
+  polygonColorMode: "fixed" | "random";
+  polygonColor: RGB;
+  panoDotScaled: boolean;
+  tagViewMode: "flat" | "tree";
+  /** Tree view only: render each tag as the shortest path suffix that's still unique. */
+  truncateTagPaths: boolean;
+  /** Tree view: how a colorless folder row gets its color. `direct` uses tagFolderColor; `firstChild` inherits the first own-colored descendant in display order, with tagFolderColor as the fallback for colorless subtrees. */
+  tagFolderColorMode: "direct" | "firstChild";
+  tagFolderColor: RGB;
+  tagSortMode: TagSortMode;
+  /** Gap between tag pills (px), shared by flat and tree views via `--tag-gap`. */
+  tagGap: number;
+  borderDetail: "heavy" | "light" | "medium";
+  subdivisionDetail: "adm1" | "off";
+  previewAspectRatio: "16 / 10" | "16 / 9" | "21 / 9" | "32 / 9" | "4 / 3" | "free";
+  tagSuggestionLimit: number;
+  /** Local REST transport for window.MMA (Settings > Advanced). */
+  remoteApi: boolean;
+  remoteApiKey: string;
+  pinnedCommands: PinnedEntry[];
+}
+```
+
+Default values for every app setting.
+
+### DISCORD_PRESENCE_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+DISCORD_PRESENCE_MODES: {
+  readonly off: "Off";
+  readonly generic: "Generic (no map name)";
+  readonly full: "Full (map name + count)";
+}
+```
+
+### EXACT_DATE_FORMATS
+
+`unstable` · since v0.10.3
+
+```ts
+EXACT_DATE_FORMATS: {
+  readonly date: "Date only";
+  readonly datetime: "Date + time";
+}
+```
+
+### GEOCODE_PROVIDER_LABELS
+
+`unstable` · since v0.10.3
+
+```ts
+GEOCODE_PROVIDER_LABELS: Record<"google" | "local" | "nominatim", string>
+```
+
+### GEOCODE_PROVIDERS
+
+`unstable` · since v0.10.3
+
+```ts
+GEOCODE_PROVIDERS: {
+  readonly local: "Local (offline)";
+  readonly nominatim: "Nominatim";
+  readonly google: "Google (from panorama)";
+}
+```
+
+### getSettings
+
+`unstable` · since v0.4.0
+
+```ts
+getSettings(): AppSettings
+```
+
+The current app settings snapshot.
+
+### LANGUAGES
+
+`unstable` · since v0.10.3
+
+```ts
+LANGUAGES: {
+  en: "English";
+  de: "Deutsch";
+  es: "Español";
+  fr: "Français";
+  ja: "日本語";
+  pl: "Polski";
+  ru: "Русский";
+  "zh-Hans": "简体中文";
+  "en-XA": "Pseudolocale";
+}
+```
+
+Supported languages, labeled in their own script. `en-XA` is a dev-only pseudolocale.
+
+### MAP_LIST_FIELDS
+
+`unstable` · since v0.10.3
+
+```ts
+MAP_LIST_FIELDS: {
+  readonly locationCount: "Location count";
+  readonly lastOpened: "Last opened";
+  readonly created: "Date created";
+}
+```
+
+### MOVEMENT_CYCLE
+
+`unstable` · since v0.10.3
+
+```ts
+MOVEMENT_CYCLE: ("moving" | "nmpz" | "no-move")[]
+```
+
+### MOVEMENT_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+MOVEMENT_MODES: {
+  readonly moving: "Moving";
+  readonly "no-move": "No Move";
+  readonly nmpz: "NMPZ";
+}
+```
+
+### navHiddenWithUI
+
+`unstable` · since v0.10.3
+
+```ts
+navHiddenWithUI(s: AppSettings): boolean
+```
+
+True while the pano-UI toggle covers the navigation visuals too.
+
+### OPACITY_TOGGLE_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+OPACITY_TOGGLE_MODES: {
+  readonly previous: "Last used opacity";
+  readonly full: "Full opacity";
+}
+```
+
+### panoDisplayOptions
+
+`unstable` · since v0.10.3
+
+```ts
+panoDisplayOptions(s: AppSettings): {
+  linksControl: boolean;
+  clickToGo: boolean;
+  showRoadLabels: boolean;
+  scrollwheel: boolean;
+}
+```
+
+Effective StreetViewPanorama display options derived from the current settings.
+
+### POLYGON_COLOR_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+POLYGON_COLOR_MODES: { readonly random: "Random"; readonly fixed: "Fixed color" }
+```
+
+### PREVIEW_ASPECT_RATIOS
+
+`unstable` · since v0.10.3
+
+```ts
+PREVIEW_ASPECT_RATIOS: {
+  "4 / 3": "4:3";
+  "16 / 10": "16:10";
+  "16 / 9": "16:9";
+  "21 / 9": "21:9";
+  "32 / 9": "32:9";
+  free: "Free";
+}
+```
+
+### resetSettings
+
+`unstable` · since v0.10.3
+
+```ts
+resetSettings(): void
+```
+
+Reset all settings to defaults.
+
+### SEEN_RESOLUTIONS
+
+`unstable` · since v0.10.3
+
+```ts
+SEEN_RESOLUTIONS: {
+  readonly low: "Low (160x90)";
+  readonly medium: "Medium (320x180)";
+  readonly high: "High (640x360)";
+}
+```
+
+### setSetting
+
+`unstable` · since v0.4.0
+
+```ts
+setSetting<K extends keyof AppSettings>(
+  key: K,
+  value: AppSettings[K],
+): void
+```
+
+Update one setting and persist. Emits `settings:changed`.
+
+### SUBDIVISION_DETAILS
+
+`unstable` · since v0.10.3
+
+```ts
+SUBDIVISION_DETAILS: { readonly off: "Off"; readonly adm1: "States / provinces" }
+```
+
+### TAG_FOLDER_COLOR_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+TAG_FOLDER_COLOR_MODES: {
+  readonly direct: "Fixed color";
+  readonly firstChild: "Inherit first child";
+}
+```
+
+### TAG_SUGGESTION_LIMITS
+
+`unstable` · since v0.10.3
+
+```ts
+TAG_SUGGESTION_LIMITS: readonly [5, 10, 25, 50, 0]
+```
+
+Tag-suggestion list cap stops (slider indices); 0 = unlimited ("All").
+
+### TAG_VIEW_MODES
+
+`unstable` · since v0.10.3
+
+```ts
+TAG_VIEW_MODES: { readonly flat: "Flat"; readonly tree: "Tree" }
+```
+
+### UNIT_SYSTEMS
+
+`unstable` · since v0.10.3
+
+```ts
+UNIT_SYSTEMS: {
+  readonly auto: "Automatic";
+  readonly metric: "Metric (m / km)";
+  readonly imperial: "Imperial (ft / mi)";
+}
+```
+
+Distance units. `auto` reads the system locale's region, so a US/UK machine gets miles.
+
+### useSetting
+
+`unstable` · since v0.10.3
+
+```ts
+useSetting<K extends keyof AppSettings>(key: K): AppSettings[K]
+```
+
+React hook: one setting value, re-rendering only when that key changes.
+
+### useSettings
+
+`unstable` · since v0.10.3
+
+```ts
+useSettings(): AppSettings
+```
+
+React hook: all settings, re-rendering on any change.
+
+## Street view
+
+### StreetView
+
+`unstable` · since v0.13.0
+
+Google Street View: coverage lookups and pano metadata, search radii, pinning locations to
+their panos and turning them along the road, links into Google Maps, and panorama
+downloads.
+
+#### StreetView.allUnofficial
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.allUnofficial(time: Pano["time"]): boolean
+```
+
+True when nothing in the timeline is official coverage, an empty stack included, so
+the multi-year history lives on official coverage nearby rather than on these panos.
+
+#### StreetView.appendLinkTags
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.appendLinkTags(url: URL, loc: Location, tagsById: Record<number, Tag>): void
+```
+
+Carry a location's tags (and its lat/lng load mode) on a Maps link, so importing it back
+reconstructs them.
+
+#### StreetView.clickRadius
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.clickRadius(lat: number, zoom: number, minRadius?: number): number
+```
+
+The radius (m) a map click searches for coverage: the zoom/lat extent, floored by
+`minRadius` (the per-map searchRadius) or the default search radius.
+
+#### StreetView.copyLink
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.copyLink(
+  url: URL,
+  props?: {
+    long?: boolean;
+  },
+): Promise<void>
+```
+
+Copy a Maps link to the clipboard, shortened unless `long`.
+
+#### StreetView.download
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.download(panoId: string, zoom?: number): Promise<void>
+```
+
+Download the full panorama as a single stitched JPEG. Toasts on failure.
+
+#### StreetView.downloadAll
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.downloadAll(
+  locations: Location[],
+  config: PanoDownloadConfig,
+  opts?: BulkOpts,
+): Promise<BulkDownloadResult>
+```
+
+Download panoramas for `locations`, uploading each image into a session dir (via
+mma-buf POST) that is packaged into a single file or Stored ZIP.
+
+#### StreetView.follow
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.follow(
+  startPanoId: string,
+  heading: number,
+  maxSteps?: number,
+): Promise<Location[]>
+```
+
+Walk linked panoramas from a starting pano in the given heading direction, returning
+the locations along the road, up to `maxSteps`.
+
+#### StreetView.initialHeading
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.initialHeading(
+  data: Pano,
+  opts?: {
+    pointAlongRoad?: boolean;
+    preferDirection?: string | null;
+  },
+): number
+```
+
+The heading a new location starts at, from the pano's road links and a direction preference.
+
+#### StreetView.isOfficial
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.isOfficial(panoId: string): boolean
+```
+
+Whether a pano id names official Google coverage.
+
+#### StreetView.jumpRadius
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.jumpRadius: number
+```
+
+Metres a jump to a typed-in coordinate searches.
+
+#### StreetView.lookup
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.lookup(
+  lat: number,
+  lng: number,
+  zoom: number,
+  opts: {
+    preferOfficial?: boolean;
+    onlyOfficial?: boolean;
+    pointAlongRoad?: boolean;
+    preferDirection?: string | null;
+    defaultPanoId?: boolean;
+    preferHigherQuality?: boolean;
+    radius?: number;
+    minRadius?: number;
+  },
+): Promise<Location | null>
+```
+
+The location a map click lands on: the best panorama near the click, its heading, and
+whether it must be pinned because it is not the default coverage there.
+
+#### StreetView.mapsUrl
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.mapsUrl(view: MapsPanoView): URL
+```
+
+A google.com/maps Street View link aimed at `view`. Official panos embed a thumbnail
+(`!6s`) so the link unfurls with a preview; unofficial ones have none to point at.
+
+#### StreetView.mergeTimelines
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.mergeTimelines(sources: (Pano | null)[]): Pano["time"]
+```
+
+A pano's stack merged with another's, for the all-unofficial case where the multi-year
+history lives on official coverage nearby. Entries are keyed by pano id and later
+sources win, so pass the pano itself last. Ascending by date, as every timeline is.
+
+#### StreetView.metadata
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.metadata(
+  panoIds: string[],
+  signal?: AbortSignal,
+): Promise<(Pano | null)[]>
+```
+
+Full pano metadata for one or more panos, aligned to `panoIds`, null where a pano does
+not exist. Rejects when a lookup fails, so a failure is never taken for a missing pano.
+Duplicates are deduped and large batches are split automatically.
+
+#### StreetView.officialFallbackRadius
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.officialFallbackRadius: number
+```
+
+Metres the viewer searches for official coverage when a pano's own timeline holds none.
+
+#### StreetView.panHeading
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.panHeading(
+  selector: Selector,
+  direction: RoadDirection,
+  opts?: BulkOpts,
+): Promise<BatchOutcome>
+```
+
+Pan every heading in the selector along the road.
+
+#### StreetView.panosAt
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.panosAt(
+  points: LatLng[],
+  props?: SearchOpts,
+): Promise<(Pano | null)[]>
+```
+
+The nearest pano to each point, aligned to `points`, null where there is no coverage.
+
+#### StreetView.pin
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.pin(selector: Selector, opts?: PinOpts): Promise<PinOutcome>
+```
+
+Pin every location in the selector to its pano id, resolving pano ids first when asked.
+
+#### StreetView.radiusAtZoom
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.radiusAtZoom(lat: number, zoom: number): number
+```
+
+Metres of map a search covers at `zoom` and latitude `lat`.
+
+#### StreetView.resolve
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.resolve(loc: Location): Promise<Pano | null>
+```
+
+The pano a location should display: the one it is pinned to when that still resolves,
+otherwise whatever sits at its coordinates.
+
+#### StreetView.searchRadius
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.searchRadius: number
+```
+
+Metres a coordinate search reaches by default.
+
+#### StreetView.shortenLink
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.shortenLink(longUrl: string): Promise<string>
+```
+
+A Maps link shortened through Google's own shortener, or the link unchanged when that fails.
+
+#### StreetView.thumbnailUrl
+
+`unstable` · since v0.13.0
+
+```ts
+StreetView.thumbnailUrl(
+  panoId: string,
+  heading: number,
+  width?: number,
+  height?: number,
+): string
+```
+
+A small preview image of a pano facing `heading`.
+
+## Tauri
+
+### dialog
+
+`unstable` · since v0.3.1
+
+#### dialog.open
+
+`unstable` · since v0.3.1
+
+```ts
+dialog.open<T extends OpenDialogOptions>(
+  options?: T,
+): Promise<OpenDialogReturn<T>>
+```
+
+Open a file/directory selection dialog.
+
+The selected paths are added to the filesystem and asset protocol scopes.
+When security is more important than the easy of use of this API,
+prefer writing a dedicated command instead.
+
+Note that the scope change is not persisted, so the values are cleared when the application is restarted.
+You can save it to the filesystem using [tauri-plugin-persisted-scope](https://github.com/tauri-apps/tauri-plugin-persisted-scope).
+
+#### dialog.save
+
+`unstable` · since v0.3.1
+
+```ts
+dialog.save(options?: SaveDialogOptions): Promise<string | null>
+```
+
+Open a file/directory save dialog.
+
+The selected path is added to the filesystem and asset protocol scopes.
+When security is more important than the easy of use of this API,
+prefer writing a dedicated command instead.
+
+Note that the scope change is not persisted, so the values are cleared when the application is restarted.
+You can save it to the filesystem using [tauri-plugin-persisted-scope](https://github.com/tauri-apps/tauri-plugin-persisted-scope).
+
+### shell
+
+`unstable` · since v0.3.1
+
+```ts
+shell: { Command: typeof Command }
+```
+
+## Test api
+
+### _test
+
+`unstable` · since v0.6.1
+
+Deterministic wrappers the e2e suite drives, mounted as `MMA._test`. App code never calls them.
+
+#### _test.closeMap
+
+`unstable` · since v0.6.1
+
+```ts
+_test.closeMap(): Promise<void>
+```
+
+Close the current map and return to the map list.
+
+#### _test.deleteMap
+
+`unstable` · since v0.6.1
+
+```ts
+_test.deleteMap(id: string): Promise<void>
+```
+
+Delete a map by id.
+
+#### _test.importFile
+
+`unstable` · since v0.6.1
+
+```ts
+_test.importFile(
+  droppedFields: string[],
+  tagNames?: string[],
+): Promise<EditorImportResult>
+```
+
+Import a previewed file, optionally assigning tags.
+
+#### _test.importPaste
+
+`unstable` · since v0.6.1
+
+```ts
+_test.importPaste(text: string): Promise<EditorImportResult[]>
+```
+
+Import locations from pasted text and commit them to the map.
+
+#### _test.mapOpen
+
+`unstable` · since v0.11.0
+
+```ts
+_test.mapOpen: {
+  start: number;
+  seen: Set<string>;
+  begin(): void;
+  mark(phase: string): void;
+}
+```
+
+#### _test.openMap
+
+`unstable` · since v0.6.1
+
+```ts
+_test.openMap(id: string): Promise<void>
+```
+
+Open a map by id and navigate to it.
+
+#### _test.syncSelections
+
+`unstable` · since v0.8.2
+
+```ts
+_test.syncSelections(): Promise<{
+  ids: number[];
+}>
+```
+
+Force a full selection re-resolve and return the selected IDs.
+
+## Util
+
+### bestBy
+
+`unstable` · since v0.10.3
+
+```ts
+bestBy<T>(
+  items: Iterable<T>,
+  isBetter: (a: T, b: T) => boolean,
+): T | null
+```
+
+The item `isBetter` prefers over every other, or null when there are none.
+
+### chunk
+
+`unstable` · since v0.10.3
+
+```ts
+chunk<T>(arr: readonly T[], n: number): T[][]
+```
+
+Split `arr` into sub-arrays of at most `n` elements.
+
+### cmpVersion
+
+`unstable` · since v0.10.3
+
+```ts
+cmpVersion(a: string, b: string): number
+```
+
+Compare two semver strings (e.g. "0.6.1", "0.7.0-rc.2"). Returns >0 if a > b.
+Build metadata is ignored; a pre-release sorts below the release it precedes.
+
+### compareNatural
+
+`unstable` · since v0.10.3
+
+```ts
+compareNatural(a: string, b: string): number
+```
+
+Compare strings with natural (numeric-aware) ordering.
+
+### copyImageToClipboard
+
+`unstable` · since v0.10.3
+
+```ts
+copyImageToClipboard(blob: Blob): Promise<boolean>
+```
+
+Copy an image Blob to the clipboard. False when the platform refuses it.
+
+### isPrereleaseVersion
+
+`unstable` · since v0.10.3
+
+```ts
+isPrereleaseVersion(v: string): boolean
+```
+
+True when `v` carries a semver pre-release tag, e.g. "1.0.0-beta.1".
+
+### isWeb
+
+`unstable` · since v0.10.3
+
+```ts
+isWeb(): boolean
+```
+
+True when the app runs in a browser instead of the desktop app.
+
+### mmaBufUrl
+
+`unstable` · since v0.5.0
+
+```ts
+mmaBufUrl(path: string): string
+```
+
+URL that serves a local file over the `mma-buf://` protocol.
+
+### nowUnix
+
+`unstable` · since v0.10.3
+
+```ts
+nowUnix(): number
+```
+
+Current time as Unix seconds, the form Location timestamps use.
+
+### phaseRate
+
+`unstable` · since v0.10.4
+
+```ts
+phaseRate(
+  prev: PhaseRate | null,
+  done: number,
+  total: number,
+  now: number,
+): {
+  state: PhaseRate;
+  rate: number | null;
+}
+```
+
+Compute a locations/second rate for the current progress phase. Re-anchors when a
+new phase is detected (done went backward or total grew). Null until a quarter second
+of work has elapsed.
+
+### pickFiles
+
+`unstable` · since v0.11.4
+
+```ts
+pickFiles(
+  accept: string,
+  opts?: {
+    multiple?: boolean;
+  },
+): Promise<File[]>
+```
+
+Prompt for files; resolves empty when the picker is dismissed.
+
+### shuffle
+
+`unstable` · since v0.11.0
+
+```ts
+shuffle<T>(items: T[]): T[]
+```
+
+Shuffle `items` in place (Fisher-Yates) and return them.
+
+### splitVersion
+
+`unstable` · since v0.10.3
+
+```ts
+splitVersion(v: string): [core: string, pre: string]
+```
+
+`["0.7.0", "rc.2"]` for `"v0.7.0-rc.2+build"`; the pre-release part is `""` when absent.
+
+### toggleInSet
+
+`unstable` · since v0.10.3
+
+```ts
+toggleInSet<T>(set: ReadonlySet<T>, value: T, on?: boolean): Set<T>
+```
+
+Copy of `set` with `value` toggled, or forced on/off by `on`.
+
+## Validation categories
+
+### STANDARD_VALIDATION_CATEGORIES
+
+`unstable` · since v0.11.4
+
+```ts
+STANDARD_VALIDATION_CATEGORIES: string[]
+```
+
+### VALIDATION_CATEGORIES
+
+`unstable` · since v0.11.4
+
+```ts
+VALIDATION_CATEGORIES: readonly ValidationCategory[]
+```
+
+### validationCategory
+
+`unstable` · since v0.11.4
+
+```ts
+validationCategory(key: string): ValidationCategory | null
+```
+
+The category a key names, or null for one this version does not know.
