@@ -90,7 +90,7 @@ The workflow's jobs:
 2. **sidecars** (one job per platform): runs the sidecar unit tests and builds the binary on
    the platform's own runner with `scripts/sidecar.mjs`, the same command as locally:
    `windows-x64` on `windows-latest` (MinGW gcc and the GNU target are installed first),
-   `linux-x64` on `ubuntu-22.04` (a low glibc requirement) and `macos-arm64` on `macos-14`.
+   `linux-x64` on `ubuntu-22.04` (a low glibc requirement) and `macos-arm64` on `macos-15`.
    Each uploads `dist/sidecars/<platform>/`.
 3. **package**: runs the plugin tests (without the sidecar ones, already run above), then for each platform assembles every plugin's
    `release/` (`MMA_SIDECAR_DIR` points at the downloaded binaries) and zips it.
