@@ -1,13 +1,13 @@
-// Zips assembled releases into dist/.
+// Archives assembled releases into dist/.
 //
 //   node scripts/package.mjs [--platform <tag>] [plugin...]
 //
 // Expects plugins/<id>/release/ to exist (`just package` assembles it first),
 // assembled for the same platform (this machine's unless --platform says otherwise).
-// Writes dist/<id>-<version>-<platform>.zip for a plugin with a sidecar and dist/<id>-<version>.zip
-// for the others; each zip has a top-level <id>/ folder, so it unzips straight into MMA's plugins
-// folder. With no plugin names it also writes dist/mma-plugins-all-<platform>.zip, holding every
-// plugin's folder.
+// Writes dist/<id>-<version>-<platform>.<zip|tar.gz> for a plugin with a sidecar (zip on Windows,
+// tar.gz on Linux and macOS) and dist/<id>-<version>.zip for the others; each archive has a
+// top-level <id>/ folder, so it extracts straight into MMA's plugins folder. With no plugin names
+// it also writes dist/mma-plugins-all-<platform>.<zip|tar.gz>, holding every plugin's folder.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -21,35 +21,31 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLATFORMS, PLATFORM_TAGS, targetPlatform } from "../scaffold/platforms.mjs";
+import { PLATFORMS, PLATFORM_TAGS, bundleArchive, pluginArchive, targetPlatform } from "../scaffold/platforms.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pluginsRoot = join(root, "plugins");
 const dist = join(root, "dist");
 const stage = join(dist, ".stage");
 
-/** bsdtar writes zips (`-a`); on Windows use the system one, since Git Bash's GNU tar cannot. */
-export function zip(out, cwd, entries) {
+/**
+ * Writes a .zip or .tar.gz (by the name of `out`) holding `entries` of `cwd`. bsdtar writes zips
+ * (`-a`); on Windows use the system one, since Git Bash's GNU tar cannot.
+ */
+export function archive(out, cwd, entries) {
 	rmSync(out, { force: true });
 	const absOut = resolve(out);
-	const r =
-		process.platform === "linux"
+	const tar = process.platform === "win32" ? join(process.env.SystemRoot, "System32", "tar.exe") : "tar";
+	const r = out.endsWith(".tar.gz")
+		? spawnSync(tar, ["-czf", absOut, "-C", cwd, ...entries], { stdio: "inherit" })
+		: process.platform === "linux"
 			? spawnSync("zip", ["-r", "-q", absOut, ...entries], {
 					cwd,
 					stdio: "inherit",
 				})
-			: spawnSync(
-					process.platform === "win32"
-						? join(process.env.SystemRoot, "System32", "tar.exe")
-						: "tar",
-					["-a", "-c", "-f", absOut, "-C", cwd, ...entries],
-					{ stdio: "inherit" },
-				);
+			: spawnSync(tar, ["-a", "-c", "-f", absOut, "-C", cwd, ...entries], { stdio: "inherit" });
 	if (r.status !== 0) throw new Error(`could not create ${out}`);
 }
-
-/** The all-plugins bundle for a platform. */
-export const bundleName = (platform) => `mma-plugins-all-${platform}.zip`;
 
 function main() {
 	const rest = process.argv.slice(2);
@@ -98,15 +94,16 @@ function main() {
 		}
 		const { id, version, sidecar } = JSON.parse(readFileSync(manifestPath, "utf8"));
 		cpSync(release, join(stage, id), { recursive: true });
-		// A plugin with a native helper has one zip per platform; the others have a single zip.
-		const out = join(dist, sidecar ? `${id}-${version}-${platform}.zip` : `${id}-${version}.zip`);
-		zip(out, stage, [id]);
+		// A plugin with a native helper has one archive per platform; the others have a single zip.
+		const out = join(dist, pluginArchive(id, version, platform, Boolean(sidecar)));
+		archive(out, stage, [id]);
 		console.log(`[package] ${out}`);
 	}
 
 	if (only.length === 0) {
-		zip(join(dist, bundleName(platform)), stage, readdirSync(stage).sort());
-		console.log(`[package] ${join(dist, bundleName(platform))}`);
+		const out = join(dist, bundleArchive(platform));
+		archive(out, stage, readdirSync(stage).sort());
+		console.log(`[package] ${out}`);
 	}
 	rmSync(stage, { recursive: true, force: true });
 }

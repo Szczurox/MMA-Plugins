@@ -1,4 +1,4 @@
-# Builds every plugin's sidecar on Windows, Linux and macOS, packages one zip per platform and
+# Builds every plugin's sidecar on Windows, Linux and macOS, packages one archive per platform and
 # creates the GitHub releases: one per plugin whose version is new, plus the rolling "bundle".
 #
 # A plugin is released when no tag <id>-v<version> exists yet. The workflow runs when a push to main
@@ -34,10 +34,10 @@ jobs:
     outputs:
       any: ${{ steps.plan.outputs.any }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # tags decide which versions are new
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - id: plan
@@ -60,8 +60,8 @@ jobs:
             os: macos-15 # Apple silicon
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Rust toolchain
@@ -76,7 +76,7 @@ jobs:
           "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - run: node scripts/sidecar.mjs test
       - run: node scripts/sidecar.mjs build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sidecar-${{ matrix.platform }}
           path: dist/sidecars/${{ matrix.platform }}
@@ -88,21 +88,21 @@ jobs:
     env:
       MMA_SIDECAR_DIR: ${{ github.workspace }}/dist/sidecars
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sidecar-windows-x64
           path: dist/sidecars/windows-x64
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sidecar-linux-x64
           path: dist/sidecars/linux-x64
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sidecar-macos-arm64
           path: dist/sidecars/macos-arm64
@@ -115,10 +115,12 @@ jobs:
             node scripts/plugins.mjs release --platform "$platform"
             node scripts/package.mjs --platform "$platform"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-zips
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
           if-no-files-found: error
 
   publish:
@@ -128,13 +130,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-zips
           path: dist

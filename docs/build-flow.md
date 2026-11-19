@@ -44,13 +44,14 @@ edited by hand.
 
 ## Packaging and GitHub releases
 
-`just package` assembles each `release/` (`scripts/plugins.mjs release`), then `scripts/package.mjs` zips each
-`release/` for the platform being built (this machine's, or `--platform`). Each zip has a
-top-level `<id>/` folder so it unzips straight into MMA's plugins folder:
+`just package` assembles each `release/` (`scripts/plugins.mjs release`), then `scripts/package.mjs` archives each
+`release/` for the platform being built (this machine's, or `--platform`). Each archive has a
+top-level `<id>/` folder so it extracts straight into MMA's plugins folder. Windows gets `.zip`,
+Linux and macOS get `.tar.gz` (`archive` in `scaffold/platforms.mjs`):
 
-- a plugin with a sidecar gets one zip per platform, `dist/<id>-<version>-<platform>.zip`;
+- a plugin with a sidecar gets one archive per platform, `dist/<id>-<version>-<platform>.<zip|tar.gz>`;
 - a plugin without one gets a single `dist/<id>-<version>.zip`;
-- with no plugin names there is also `dist/mma-plugins-all-<platform>.zip` with every plugin.
+- with no plugin names there is also `dist/mma-plugins-all-<platform>.<zip|tar.gz>` with every plugin.
 
 The platforms are the ones MMA supports for sidecars and are named the way MMA names them:
 `windows-x64`, `linux-x64` and `macos-arm64` (`scaffold/platforms.mjs`). The sidecar binary is
@@ -95,9 +96,9 @@ The workflow's jobs:
 3. **package**: runs the plugin tests (without the sidecar ones, already run above), then for each platform assembles every plugin's
    `release/` (`MMA_SIDECAR_DIR` points at the downloaded binaries) and zips it.
 4. **publish** (skipped in build-only mode): `scripts/release-upload.mjs` creates one release
-   per new version, tag `<id>-v<version>`, with the plugin's zips and a `checksums.txt`
-   (`<sha256>  <file>`, the format MMA reads), notes from the `CHANGES.md` entry (plus a source
-   link for GPL sidecars), and recreates the rolling `bundle` release with the per-platform
+   per new version, tag `<id>-v<version>`, with the plugin's archives (one per system when it has a sidecar),
+   notes from the `CHANGES.md` entry plus the install steps for each system (and a note on the
+   per-system archives, and a source link, for GPL sidecars), and recreates the rolling `bundle` release with the per-platform
    all-plugins zips, marked as the repository's latest release. It refuses to run outside Actions.
 
 If a run fails, fix the cause and start it again with `just publish` (or push a fix that touches a

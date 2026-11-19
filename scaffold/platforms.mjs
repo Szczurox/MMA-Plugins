@@ -1,23 +1,65 @@
-// The platforms MMA runs sidecars on, named the way MMA names them (windows-x64, macos-arm64,
-// linux-x64). A plugin with a sidecar ships one zip per platform; the others ship a single zip.
+// The platforms MMA runs sidecars on. A plugin with a sidecar ships one archive per platform
+// (`archive` is its format: .zip on Windows, .tar.gz on Linux and macOS, which keep the executable bit);
+// the others ship a single zip.
 
 export const PLATFORMS = {
-	"windows-x64": { os: "win32", arch: "x64", exe: ".exe", triples: ["x86_64-pc-windows-gnu"], label: "Windows" },
-	"linux-x64": { os: "linux", arch: "x64", exe: "", triples: ["x86_64-unknown-linux-gnu"], label: "Linux" },
-	"macos-arm64": { os: "darwin", arch: "arm64", exe: "", triples: ["aarch64-apple-darwin"], label: "macOS (Apple silicon)" },
+	"windows-x64": {
+		os: "win32",
+		arch: "x64",
+		exe: ".exe",
+		triples: ["x86_64-pc-windows-gnu"],
+		label: "Windows",
+		archive: "zip",
+	},
+	"linux-x64": {
+		os: "linux",
+		arch: "x64",
+		exe: "",
+		triples: ["x86_64-unknown-linux-gnu"],
+		label: "Linux",
+		archive: "tar.gz",
+	},
+	"macos-arm64": {
+		os: "darwin",
+		arch: "arm64",
+		exe: "",
+		triples: ["aarch64-apple-darwin"],
+		label: "macOS (Apple silicon)",
+		archive: "tar.gz",
+	},
 };
 
 export const PLATFORM_TAGS = Object.keys(PLATFORMS);
 
+/** Archive file name of a plugin version: per platform when it has a sidecar, else one zip for all. */
+export function pluginArchive(id, version, platform, hasSidecar) {
+	return hasSidecar
+		? `${id}-${version}-${platform}.${PLATFORMS[platform].archive}`
+		: `${id}-${version}.zip`;
+}
+
+/** Archive file name of the all-plugins bundle for a platform. */
+export const bundleArchive = (platform) =>
+	`mma-plugins-all-${platform}.${PLATFORMS[platform].archive}`;
+
 /** The platform this machine is, or null when MMA has no sidecar build for it. */
 export function hostPlatform() {
-	return PLATFORM_TAGS.find((t) => PLATFORMS[t].os === process.platform && PLATFORMS[t].arch === process.arch) ?? null;
+	return (
+		PLATFORM_TAGS.find(
+			(t) =>
+				PLATFORMS[t].os === process.platform &&
+				PLATFORMS[t].arch === process.arch,
+		) ?? null
+	);
 }
 
 /** The platform being built for: MMA_PLATFORM when set (CI packages every platform), else this machine. */
 export function targetPlatform() {
 	const tag = process.env.MMA_PLATFORM;
-	if (tag && !PLATFORMS[tag]) throw new Error(`Unknown platform "${tag}"; expected ${PLATFORM_TAGS.join(", ")}`);
+	if (tag && !PLATFORMS[tag])
+		throw new Error(
+			`Unknown platform "${tag}"; expected ${PLATFORM_TAGS.join(", ")}`,
+		);
 	return tag || hostPlatform();
 }
 

@@ -69,8 +69,8 @@ library is C code:
 The library's Rust crate is vendored in `sidecar/vendor/` (see its README).
 The first build downloads the crates and takes a minute or two; later ones are incremental.
 
-Releases ship one zip per system (`weatherPlus-<version>-windows-x64.zip`, `-linux-x64.zip`,
-`-macos-arm64.zip`), built by the Release workflow on each platform's own runner.
+Releases ship one archive per system (`weatherPlus-<version>-windows-x64.zip`, `-linux-x64.tar.gz`,
+`-macos-arm64.tar.gz`), built by the Release workflow on each platform's own runner.
 
 `inspect --file <url>` prints the dimensions of any remote `.om` file. When cell, hour or tier
 selection changes, also compare a few worldwide points against the Open-Meteo API

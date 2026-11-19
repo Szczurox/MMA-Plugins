@@ -9,7 +9,7 @@ GitHub release notes.
   instead of ERA5 (~28 km resolution). Earlier times and rows without IFS data still use ERA5.
 - Much less time per batch: the land masks are downloaded once and cached, instead of on every batch.
 - Now available for Linux (x64) and macOS (Apple silicon) as well as Windows. Each system has its own
-  zip, `weatherPlus-<version>-<system>.zip`.
+  archive, `weatherPlus-<version>-<system>.zip` on Windows and `.tar.gz` on Linux and macOS.
 
 ## 0.2.23
 
