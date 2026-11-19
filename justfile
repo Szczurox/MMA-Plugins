@@ -17,9 +17,9 @@ package *plugins:
     node scripts/plugins.mjs release {{plugins}}
     node scripts/package.mjs {{plugins}}
 
-# Publish GitHub releases for plugins whose version has no tag yet (--dry-run to only check).
-publish *flags:
-    node scripts/publish.mjs {{flags}}
+# Release plugins whose version has no tag yet, by starting the Release workflow on GitHub (--dry-run to only check).
+release *flags:
+    node scripts/release.mjs {{flags}}
 
 # Create plugins/<name> from a template in templates/ (asks which one when omitted).
 new name template="":

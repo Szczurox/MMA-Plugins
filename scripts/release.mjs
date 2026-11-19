@@ -2,7 +2,7 @@
 // builds every plugin's sidecar on Windows, Linux and macOS runners, packages one archive per platform
 // and creates the GitHub releases (see .github/workflows/release.yml).
 //
-//   node scripts/publish.mjs [--dry-run] [--build-only] [--yes]
+//   node scripts/release.mjs [--dry-run] [--build-only] [--yes]
 //
 // The workflow already starts by itself when a push to main changes a plugin's manifest.json, so
 // bumping `version` (plus a `## <version>` entry in CHANGES.md) and pushing is a release. Use this
@@ -26,7 +26,7 @@ import { originRepo, planReleases, printPlan } from "./release-plan.mjs";
 const args = process.argv.slice(2);
 const bad = args.filter((a) => !["--dry-run", "--build-only", "--yes"].includes(a));
 if (bad.length > 0) {
-	console.error(`Unknown argument(s): ${bad.join(", ")}\nUsage: node scripts/publish.mjs [--dry-run] [--build-only] [--yes]`);
+	console.error(`Unknown argument(s): ${bad.join(", ")}\nUsage: node scripts/release.mjs [--dry-run] [--build-only] [--yes]`);
 	process.exit(1);
 }
 const dryRun = args.includes("--dry-run");

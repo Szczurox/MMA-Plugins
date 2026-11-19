@@ -25,7 +25,7 @@ just sync [plugin...]         # build (Rust sidecar included) and install into %
 just dev [plugin...]          # watch and sync on every change until Ctrl+C (uses the last built sidecar)
 just test [plugin...]         # run plugin tests, including each sidecar's Rust unit tests
 just package [plugin...]      # build, assemble <plugin>/release/ and zip into dist/ (per platform for plugins with a sidecar)
-just publish [--dry-run]      # start the Release workflow by hand (a push to main starts it automatically)
+just release [--dry-run]      # start the Release workflow by hand (a push to main starts it automatically)
 just new <name> [template]    # create plugins/<name> from templates/ (basic, procedure, sidecar)
 ```
 

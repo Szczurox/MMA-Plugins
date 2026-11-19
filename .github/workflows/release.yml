@@ -4,7 +4,7 @@
 # A plugin is released when no tag <id>-v<version> exists yet. The workflow runs when a push to main
 # changes a plugin's manifest.json (where `version` lives), so bumping a version and pushing is the
 # whole release; pushes that bump nothing stop after the plan job. It can also be started by hand
-# (`just publish`, or "Run workflow" on GitHub), which is how to retry a failed run or to try the
+# (`just release`, or "Run workflow" on GitHub), which is how to retry a failed run or to try the
 # builds with "Build and test only", which publishes nothing.
 name: Release
 
