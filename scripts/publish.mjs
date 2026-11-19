@@ -1,5 +1,5 @@
 // Starts the Release workflow on GitHub by hand from this machine. The workflow does the work: it
-// builds every plugin's sidecar on Windows, Linux and macOS runners, packages one zip per platform
+// builds every plugin's sidecar on Windows, Linux and macOS runners, packages one archive per platform
 // and creates the GitHub releases (see .github/workflows/release.yml).
 //
 //   node scripts/publish.mjs [--dry-run] [--build-only] [--yes]
