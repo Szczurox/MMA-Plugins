@@ -39,7 +39,7 @@ copied into a plugin; plugin scripts reach it through `../../scaffold/`.
 | `src/index.ts[x]`      | UI entry point; calls `MMA.registerPlugin`                                                    |
 | `src/procedure.ts`     | Enrichment logic run in the host's QuickJS guest                                              |
 | `test/*.test.mjs`      | Tests run against the built procedure with a mocked `mma`                                     |
-| `sidecar/`             | Optional Rust crate; its compiled exe ships as `sidecar/<name>.exe`                           |
+| `sidecar/`             | Optional Rust crate; its binary ships as `sidecar/<name>.exe` (Windows) or `sidecar/<name>`   |
 | `README.md`            | Documentation, added to `release/`                                                            |
 | `CHANGES.md`           | `## <version>` entries, newest first; the entry for the released version is the release notes |
 | `LICENSE`              | License, added to `release/` only (the plugin's own, else `sidecar/LICENSE`)                  |

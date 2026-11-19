@@ -8,16 +8,18 @@
 // Everything a plugin needs at runtime lands in <plugin>/build/, which is the folder to install or
 // zip: the bundled UI (index.js), the enrichment procedure when the manifest names one, a copy of
 // manifest.json, NOTICE.md when the plugin has one, and for a plugin that declares a sidecar the
-// built helper (sidecar/<name>.exe plus version.txt) when it has been compiled.
+// built helper (sidecar/<name>.exe on Windows, sidecar/<name> elsewhere, plus version.txt) when it
+// has been compiled for the platform being built (this machine's, or MMA_PLATFORM).
 //
 // Auto-detects the UI entry point (src/index.tsx > src/index.ts) and applies JSX config only when
 // needed. A plugin whose manifest names a `procedure` also gets that module bundled from
 // src/procedure.ts.
 
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
+import { PLATFORMS, PLATFORM_TAGS, binaryName, targetPlatform } from "./platforms.mjs";
 
 // This script lives in <repo>/scaffold; plugin folders are in <repo>/plugins.
 const pluginsDir = resolve(dirname(fileURLToPath(import.meta.url)), "..", "plugins");
@@ -124,31 +126,44 @@ export function copyStatic(pluginDir) {
 	}
 }
 
-/** Where cargo puts the release exe of a plugin's sidecar, or null when it has not been built. */
-export function sidecarExe(pluginDir, name) {
-	const exe = `${name}.exe`;
-	return (
-		[
-			join(pluginDir, "sidecar", "target", "x86_64-pc-windows-gnu", "release", exe),
-			join(pluginDir, "sidecar", "target", "release", exe),
-		].find(existsSync) ?? null
-	);
+/**
+ * Where the built sidecar binary of a plugin is for a platform, or null when it has not been built.
+ * With MMA_SIDECAR_DIR set (CI), only <dir>/<platform>/<plugin>/<binary> counts; otherwise cargo's
+ * output folders in the plugin's sidecar/ are searched.
+ */
+export function sidecarExe(pluginDir, name, platform = targetPlatform()) {
+	if (!platform) return null;
+	const bin = binaryName(name, platform);
+	const staged = process.env.MMA_SIDECAR_DIR;
+	if (staged) {
+		const path = join(staged, platform, basename(pluginDir), bin);
+		return existsSync(path) ? path : null;
+	}
+	const target = join(pluginDir, "sidecar", "target");
+	return [...PLATFORMS[platform].triples.map((t) => join(target, t, "release", bin)), join(target, "release", bin)].find(existsSync) ?? null;
 }
 
 /** Copy the compiled sidecar into build/sidecar/. Returns false (with a warning) when it is not built. */
 export function copySidecar(pluginDir) {
 	const sidecar = readManifest(pluginDir)?.sidecar;
 	if (!sidecar) return true;
-	const exe = sidecarExe(pluginDir, sidecar.name);
+	const platform = targetPlatform();
+	const id = pluginDir.slice(pluginsDir.length + 1);
+	if (!platform) {
+		console.warn(`[${id}] no sidecar build for ${process.platform}-${process.arch}; MMA supports ${PLATFORM_TAGS.join(", ")}`);
+		return false;
+	}
+	const exe = sidecarExe(pluginDir, sidecar.name, platform);
 	if (!exe) {
-		console.warn(
-			`[${pluginDir.slice(pluginsDir.length + 1)}] sidecar not built: run "node setup.mjs && cargo build --release" in sidecar/`,
-		);
+		console.warn(`[${id}] sidecar not built for ${platform}: build it with "just sync ${id}"`);
 		return false;
 	}
 	const out = join(buildDir(pluginDir), "sidecar");
 	mkdirSync(out, { recursive: true });
-	copyFileSync(exe, join(out, `${sidecar.name}.exe`));
+	const dest = join(out, binaryName(sidecar.name, platform));
+	copyFileSync(exe, dest);
+	// Artifact transfers drop the executable bit, and the zip keeps whatever mode the file has.
+	if (platform !== "windows-x64") chmodSync(dest, 0o755);
 	writeFileSync(join(out, "version.txt"), sidecar.version);
 	return true;
 }

@@ -1,70 +1,34 @@
-//! `lookup`: read ERA5 cloud cover for a batch of (lat, lng, time) rows.
+//! `lookup`: read cloud cover for a batch of (lat, lng, time) rows from Open-Meteo's public bucket.
 //!
-//! ERA5 up to 2023 lives in one file per year (`year_YYYY.om`, dims [lat, lon, hour of year]);
-//! later data is in 504-hour chunk files (`chunk_N.om`, N = hours since 1970 / 504). Each file is
-//! opened once and every row reads a single value from it with range requests.
+//! Two tiers, picked per row by capture time:
+//!   * 2017-01-01 and later: ECMWF IFS HRES, ~9 km (`ifs`).
+//!   * earlier, and as a fallback when IFS has no value: ERA5, 0.25 degree (`era5`).
+//!
+//! Each file is opened once and every row reads a single value from it with range requests.
 
-use crate::BASE;
-use crate::http;
+use crate::model::{Key, Row};
+use crate::reader::read_keys;
+use crate::statics::{load_elevation, set_cache_dir};
+use crate::{BASE, era5, http, ifs};
 use omfiles::reader::OmFileReader;
 use omfiles::traits::OmArrayVariable;
-use rayon::prelude::*;
-use serde::Deserialize;
-use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
 
-const CHUNK_HOURS: i64 = 504;
-const LAST_YEAR_FILE: i64 = 2023;
-
-#[derive(Deserialize)]
-struct Row {
-    id: serde_json::Value,
-    lat: f64,
-    lng: f64,
-    t: f64,
+/// Where a row's value lives: the preferred key and, for IFS rows, the ERA5 key to fall back on.
+struct Located {
+    n: usize,
+    primary: Key,
+    fallback: Option<Key>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-enum Source {
-    Year(i64),
-    Chunk(i64),
+/// Land masks per tier; `None` when one could not be loaded (the nearest cell is used then).
+struct Elevations {
+    era5: Option<Vec<f32>>,
+    ifs: Option<Vec<f32>>,
 }
 
-impl Source {
-    fn file(self) -> String {
-        match self {
-            Source::Year(y) => format!("year_{y}.om"),
-            Source::Chunk(n) => format!("chunk_{n}.om"),
-        }
-    }
-}
-
-/// Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's algorithm).
-fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
-    let y = if m <= 2 { y - 1 } else { y };
-    let era = y.div_euclid(400);
-    let yoe = y - era * 400;
-    let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + d - 1;
-    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-    era * 146097 + doe - 719468
-}
-
-fn year_of(days: i64) -> i64 {
-    let z = days + 719468;
-    let era = z.div_euclid(146097);
-    let doe = z - era * 146097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    yoe + era * 400 + if m <= 2 { 1 } else { 0 }
-}
-
-type Key = (Source, u64, u64, u64);
-
-/// Where a row's value lives: file, and (lat index, lon index, time index) inside it.
-fn locate(row: &Row) -> Result<Key, String> {
+fn locate(n: usize, row: &Row, elev: &Elevations) -> Result<Located, String> {
     if !(row.lat.is_finite() && row.lng.is_finite() && row.t.is_finite()) {
         return Err("not a number".into());
     }
@@ -72,78 +36,11 @@ fn locate(row: &Row) -> Result<Key, String> {
         return Err("coordinates out of range".into());
     }
     let hour_abs = (row.t / 3600.0).floor() as i64;
-    let days = hour_abs.div_euclid(24);
-    let year = year_of(days);
-    if year < 1940 {
-        return Err("before 1940".into());
+    let era5 = era5::key(row, hour_abs, elev.era5.as_deref());
+    if hour_abs >= ifs::START_HOUR {
+        return Ok(Located { n, primary: ifs::key(row, hour_abs, elev.ifs.as_deref()), fallback: era5.ok() });
     }
-    let (src, idx) = if year <= LAST_YEAR_FILE {
-        (Source::Year(year), hour_abs - days_from_civil(year, 1, 1) * 24)
-    } else {
-        let n = hour_abs.div_euclid(CHUNK_HOURS);
-        (Source::Chunk(n), hour_abs - n * CHUNK_HOURS)
-    };
-    let i = ((row.lat + 90.0) / 0.25).round() as u64;
-    let j = (((row.lng + 180.0).rem_euclid(360.0) / 0.25).round() as u64) % 1440;
-    Ok((src, i, j, idx as u64))
-}
-
-type Reader = OmFileReader<http::HttpBackend>;
-
-fn open(agent: &ureq::Agent, stats: &Arc<http::Stats>, src: Source) -> Result<Reader, String> {
-    let url = format!("{BASE}/{}", src.file());
-    let backend = http::HttpBackend::open(agent.clone(), url, stats.clone())?;
-    OmFileReader::new(Arc::new(backend)).map_err(|e| format!("{}: {e}", src.file()))
-}
-
-const STATIC_ELEVATION: &str = "https://openmeteo.s3.amazonaws.com/data/copernicus_era5/static/HSURF.om";
-const NY: usize = 721;
-const NX: usize = 1440;
-
-/// ERA5 surface elevation for the whole grid; -999 marks sea cells. One small file (~380 KB).
-fn load_elevation(agent: &ureq::Agent, stats: &Arc<http::Stats>) -> Result<Vec<f32>, String> {
-    let backend = http::HttpBackend::open(agent.clone(), STATIC_ELEVATION.into(), stats.clone())?;
-    let reader = OmFileReader::new(Arc::new(backend)).map_err(|e| e.to_string())?;
-    let arr = reader.expect_array().map_err(|e| e.to_string())?;
-    if arr.get_dimensions() != [NY as u64, NX as u64] {
-        return Err(format!("unexpected elevation dims {:?}", arr.get_dimensions()));
-    }
-    let data = arr.read::<f32>(&[0..NY as u64, 0..NX as u64]).map_err(|e| e.to_string())?;
-    Ok(data.iter().copied().collect())
-}
-
-/// Open-Meteo's default `cell_selection=land` avoids sea cells for coastal points. Without the
-/// point's own elevation the full rule cannot be reproduced, so when the nearest cell is sea this
-/// takes the nearest land cell among the 3x3 around it (the API considers the same 3x3).
-fn snap_to_land(elev: &[f32], lat: f64, lng: f64, i: u64, j: u64) -> (u64, u64) {
-    let is_sea = |y: usize, x: usize| {
-        let e = elev[y * NX + x];
-        e.is_nan() || e <= -999.0
-    };
-    if !is_sea(i as usize, j as usize) {
-        return (i, j);
-    }
-    let mut best: Option<(f64, usize, usize)> = None;
-    for dy in -1i64..=1 {
-        for dx in -1i64..=1 {
-            let y = i as i64 + dy;
-            if y < 0 || y >= NY as i64 {
-                continue;
-            }
-            let x = (j as i64 + dx).rem_euclid(NX as i64) as usize;
-            if is_sea(y as usize, x) {
-                continue;
-            }
-            let cell_lat = y as f64 * 0.25 - 90.0;
-            let cell_lng = x as f64 * 0.25 - 180.0;
-            let dlng = (cell_lng - lng + 540.0).rem_euclid(360.0) - 180.0;
-            let d = (cell_lat - lat).powi(2) + dlng.powi(2);
-            if best.is_none_or(|b| d < b.0) {
-                best = Some((d, y as usize, x));
-            }
-        }
-    }
-    best.map_or((i, j), |b| (b.1 as u64, b.2 as u64))
+    era5.map(|k| Located { n, primary: k, fallback: None })
 }
 
 fn emit(out: &mut impl Write, v: serde_json::Value) {
@@ -151,16 +48,21 @@ fn emit(out: &mut impl Write, v: serde_json::Value) {
     let _ = out.flush();
 }
 
+/// Print the dimensions of a remote file (a full URL, or a name under the ERA5 base).
 pub fn inspect(file: &str) {
     let stats = Arc::new(http::Stats::default());
     let agent = http::agent(4);
-    let backend = http::HttpBackend::open(agent, format!("{BASE}/{file}"), stats).expect("open");
+    let url = if file.starts_with("http") { file.to_string() } else { format!("{BASE}/{file}") };
+    let backend = http::HttpBackend::open(agent, url, stats).expect("open");
     let reader = OmFileReader::new(Arc::new(backend)).expect("om reader");
     let arr = reader.expect_array().expect("array");
     println!("{file}: dims {:?} chunks {:?}", arr.get_dimensions(), arr.get_chunk_dimensions());
 }
 
-pub fn run(input: Option<&str>, threads: usize) {
+pub fn run(input: Option<&str>, threads: usize, data_dir: Option<&str>) {
+    if let Some(dir) = data_dir {
+        set_cache_dir(dir);
+    }
     let mut out = std::io::stdout().lock();
     eprintln!("lookup: input {:?}, {threads} threads", input);
     let text = match input {
@@ -177,79 +79,151 @@ pub fn run(input: Option<&str>, threads: usize) {
             std::process::exit(2);
         }
     };
+    process(&rows, threads, out);
+}
 
+/// Resolve every row and write one JSON line per row, then a `done` line, to `out`.
+fn process(rows: &[Row], threads: usize, mut out: impl Write) {
+    let started = std::time::Instant::now();
     let pool = rayon::ThreadPoolBuilder::new().num_threads(threads.max(1)).build().unwrap();
     let stats = Arc::new(http::Stats::default());
     let agent = http::agent(threads);
 
-    let elevation = match load_elevation(&agent, &stats) {
+    let mut mask = |what: &str, url: &str, dims: &[u64]| match load_elevation(&agent, &stats, url, dims) {
         Ok(e) => Some(e),
         Err(e) => {
-            emit(&mut out, serde_json::json!({ "warn": format!("no land mask, using nearest cell: {e}") }));
+            emit(&mut out, serde_json::json!({ "warn": format!("no {what} land mask, using nearest cell: {e}") }));
             None
         }
     };
+    let elevation = Elevations {
+        era5: mask("ERA5", era5::ELEVATION, &[era5::NY as u64, era5::NX as u64]),
+        ifs: mask("IFS", ifs::ELEVATION, &[1, ifs::COUNT as u64]),
+    };
+    eprintln!("lookup: land masks loaded in {:.1}s", started.elapsed().as_secs_f64());
 
     // Locate every row; bad rows are reported straight away.
-    let mut located: Vec<(usize, Key)> = Vec::with_capacity(rows.len());
+    let mut located: Vec<Located> = Vec::with_capacity(rows.len());
     for (n, row) in rows.iter().enumerate() {
-        match locate(row) {
-            Ok((s, i, j, t)) => {
-                let (i, j) = match &elevation {
-                    Some(e) => snap_to_land(e, row.lat, row.lng, i, j),
-                    None => (i, j),
-                };
-                located.push((n, (s, i, j, t)));
-            }
+        match locate(n, row, &elevation) {
+            Ok(l) => located.push(l),
             Err(e) => emit(&mut out, serde_json::json!({ "id": row.id, "error": e })),
         }
     }
 
-    // Open each needed file once, in parallel.
-    let mut sources: Vec<Source> = located.iter().map(|l| l.1.0).collect();
-    sources.sort_by_key(|s| s.file());
-    sources.dedup();
-    let readers: HashMap<Source, Result<Reader, String>> =
-        pool.install(|| sources.par_iter().map(|&s| (s, open(&agent, &stats, s))).collect());
+    let (mut values, mut total) = read_keys(&pool, &agent, &stats, located.iter().map(|l| l.primary).collect());
+    eprintln!("lookup: {total} primary reads done at {:.1}s", started.elapsed().as_secs_f64());
 
-    // Identical (file, cell, hour) lookups are read once.
-    let mut keys: Vec<Key> = located.iter().map(|l| l.1).collect();
-    keys.sort_by_key(|k| (k.0.file(), k.1, k.2, k.3));
-    keys.dedup();
-    let total = keys.len();
-    let values: HashMap<Key, Result<f32, String>> = pool.install(|| {
-        keys.par_iter()
-            .map(|&k| {
-                let r = match &readers[&k.0] {
-                    Err(e) => Err(e.clone()),
-                    Ok(reader) => reader
-                        .expect_array()
-                        .map_err(|e| e.to_string())
-                        .and_then(|a| {
-                            a.read::<f32>(&[k.1..k.1 + 1, k.2..k.2 + 1, k.3..k.3 + 1])
-                                .map_err(|e| e.to_string())
-                        })
-                        .and_then(|v| v.iter().next().copied().ok_or_else(|| "empty read".to_string())),
-                };
-                (k, r)
-            })
-            .collect()
-    });
+    // IFS rows without a usable value fall back to ERA5.
+    let usable = |v: &Result<f32, String>| matches!(v, Ok(x) if x.is_finite());
+    let fallbacks: Vec<Key> =
+        located.iter().filter(|l| !usable(&values[&l.primary])).filter_map(|l| l.fallback).collect();
+    let mut fell_back = 0usize;
+    if !fallbacks.is_empty() {
+        let (more, n) = read_keys(&pool, &agent, &stats, fallbacks);
+        total += n;
+        values.extend(more);
+    }
 
-    for (n, key) in &located {
-        let id = &rows[*n].id;
-        match &values[key] {
-            Ok(v) if v.is_finite() => emit(
-                &mut out,
-                serde_json::json!({ "id": id, "cloudCover": (*v as f64 * 10.0).round() / 10.0 }),
-            ),
+    for l in &located {
+        let id = &rows[l.n].id;
+        let mut value = &values[&l.primary];
+        if !usable(value) {
+            if let Some(v) = l.fallback.and_then(|k| values.get(&k)).filter(|v| usable(v)) {
+                value = v;
+                fell_back += 1;
+            }
+        }
+        match value {
+            Ok(v) if v.is_finite() => {
+                emit(&mut out, serde_json::json!({ "id": id, "cloudCover": (*v as f64 * 10.0).round() / 10.0 }))
+            }
             Ok(_) => emit(&mut out, serde_json::json!({ "id": id, "error": "no data" })),
             Err(e) => emit(&mut out, serde_json::json!({ "id": id, "error": e })),
         }
     }
     emit(
         &mut out,
-        serde_json::json!({ "done": true, "rows": rows.len(), "reads": total,
+        serde_json::json!({ "done": true, "rows": rows.len(), "reads": total, "fellBack": fell_back,
             "requests": stats.requests.load(std::sync::atomic::Ordering::Relaxed) }),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{CHUNK_HOURS, Source};
+    use crate::time::ts;
+
+    const NO_ELEV: Elevations = Elevations { era5: None, ifs: None };
+
+    fn at(lat: f64, lng: f64, t: f64) -> Result<Located, String> {
+        locate(0, &Row::at(lat, lng, t), &NO_ELEV)
+    }
+
+    #[test]
+    fn rows_before_2017_use_era5_only() {
+        let l = at(52.5, 13.4, ts(2016, 12, 31, 23)).ok().unwrap();
+        assert!(l.primary.0 == Source::Year(2016));
+        assert!(l.fallback.is_none());
+        // Hour index inside the year file: Dec 31 23:00 of a leap year.
+        assert_eq!(l.primary.3, 366 * 24 - 1);
+    }
+
+    #[test]
+    fn rows_from_2017_use_ifs_with_an_era5_fallback() {
+        let l = at(52.5, 13.4, ts(2017, 1, 1, 0)).ok().unwrap();
+        let n = ifs::START_HOUR.div_euclid(CHUNK_HOURS);
+        assert!(l.primary.0 == Source::IfsChunk(n));
+        assert_eq!(l.primary.1, 0);
+        assert_eq!(l.primary.3 as i64, ifs::START_HOUR - n * CHUNK_HOURS);
+        assert!(matches!(l.fallback, Some((Source::Year(2017), ..))));
+
+        let l = at(52.5, 13.4, ts(2025, 5, 5, 5)).ok().unwrap();
+        assert!(matches!(l.primary.0, Source::IfsChunk(_)));
+        assert!(matches!(l.fallback, Some((Source::Chunk(_), ..))), "2024+ ERA5 lives in chunk files");
+    }
+
+    #[test]
+    fn a_known_hour_lands_in_the_expected_chunk_and_url() {
+        // 2024-07-15 12:00 UTC is hour 478068 since 1970: chunk 948, offset 276.
+        let l = at(52.52, 13.405, 1_721_044_800.0).ok().unwrap();
+        assert!(l.primary.0 == Source::IfsChunk(948));
+        assert_eq!(l.primary.3, 276);
+        assert_eq!(
+            Source::IfsChunk(948).url(),
+            "https://openmeteo.s3.amazonaws.com/data/ecmwf_ifs/cloud_cover/chunk_948.om"
+        );
+    }
+
+    #[test]
+    fn times_are_floored_to_the_utc_hour() {
+        let a = at(0.0, 0.0, ts(2020, 1, 1, 5) + 3599.0).ok().unwrap();
+        let b = at(0.0, 0.0, ts(2020, 1, 1, 5)).ok().unwrap();
+        let c = at(0.0, 0.0, ts(2020, 1, 1, 6)).ok().unwrap();
+        assert!(a.primary == b.primary);
+        assert!(a.primary != c.primary);
+    }
+
+    #[test]
+    fn bad_rows_are_rejected() {
+        let t = ts(2020, 1, 1, 0);
+        assert!(at(f64::NAN, 0.0, t).is_err());
+        assert!(at(0.0, f64::INFINITY, t).is_err());
+        assert!(at(0.0, 0.0, f64::NAN).is_err());
+        assert!(at(90.5, 0.0, t).is_err());
+        assert!(at(0.0, 180.5, t).is_err());
+        assert!(at(0.0, 0.0, ts(1939, 12, 31, 23)).is_err());
+        assert!(at(0.0, 0.0, ts(1940, 1, 1, 0)).is_ok());
+    }
+
+    #[test]
+    fn locate_uses_the_ifs_mask_when_present() {
+        // All sea keeps the nearest point; marking that point as land keeps it too.
+        let mut elev = Elevations { era5: None, ifs: Some(vec![-999.0; ifs::COUNT as usize]) };
+        let sea = locate(0, &Row::at(35.0, 139.7, ts(2020, 1, 1, 0)), &elev).ok().unwrap();
+        elev.ifs.as_mut().unwrap()[sea.primary.2 as usize] = 20.0;
+        let land = locate(0, &Row::at(35.0, 139.7, ts(2020, 1, 1, 0)), &elev).ok().unwrap();
+        assert_eq!(sea.primary.2, land.primary.2);
+    }
 }

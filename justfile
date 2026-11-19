@@ -4,20 +4,17 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 default:
     @just --list
 
-# Build plugins and install them into the local MMA plugins folder.
+# Build plugins (Rust sidecars too; needs Rust and a C compiler) and install them into the local MMA plugins folder.
 sync *plugins:
     node scripts/plugins.mjs sync {{plugins}}
 
-# Run plugin tests.
+# Run plugin tests, including each sidecar's Rust unit tests (needs Rust for plugins with a sidecar).
 test *plugins:
     node scripts/plugins.mjs test {{plugins}}
 
-# Build plugins and assemble <plugin>/release/.
-release *plugins:
+# Build plugins, assemble <plugin>/release/ and zip into dist/ (plus the all-plugins bundle when no names are given).
+package *plugins:
     node scripts/plugins.mjs release {{plugins}}
-
-# Build releases and zip them into dist/ (plus the all-plugins bundle when no names are given).
-package *plugins: (release plugins)
     node scripts/package.mjs {{plugins}}
 
 # Publish GitHub releases for plugins whose version has no tag yet (--dry-run to only check).

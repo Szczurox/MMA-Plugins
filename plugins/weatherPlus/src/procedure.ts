@@ -1,5 +1,5 @@
-// Enrichment: hands a whole chunk of rows to the bundled sidecar, which reads ERA5 cloud cover
-// straight from Open-Meteo's public archive (the same ERA5 grid the API provider is pinned to).
+// Enrichment: hands a whole chunk of rows to the bundled sidecar, which reads cloud cover
+// straight from Open-Meteo's public archive: ECMWF IFS (~9 km) from 2017, ERA5 (0.25 degree) before.
 //
 // The sidecar prints one JSON object per row: {id, cloudCover}, or {id, error} for a row it could
 // not answer, plus {done, ...} at the end and {warn|fatal: text} for problems worth logging.

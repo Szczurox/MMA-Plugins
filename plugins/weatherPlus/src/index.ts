@@ -1,4 +1,4 @@
-// Weather+: historical cloud cover at the exact capture time, from ERA5. Targets MMA 0.10.x.
+// Weather+: historical cloud cover at the exact capture time, from ECMWF IFS (2017+) and ERA5. Targets MMA 0.10.x.
 //
 // Data enrichment only: no sidebar. The work happens in procedure.ts, which hands rows to the
 // bundled sidecar. The field key matches the upstream Weather plugin, so Moon's cloud-aware verdict

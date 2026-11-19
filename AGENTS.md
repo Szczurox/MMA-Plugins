@@ -17,13 +17,12 @@ docs/           architecture and build flow
 Run from the repo root. Plugin ids are optional (default: all).
 
 ```powershell
-just sync [plugin...]        # build and install into %APPDATA%\app.map-making.local\plugins\<id>
-just dev [plugin...]         # watch and sync on every change until Ctrl+C
-just test [plugin...]        # run plugin tests
-just release [plugin...]     # build and assemble <plugin>/release/
-just package [plugin...]     # release, then zip into dist/ (plus the all-plugins bundle when no names)
-just publish [--dry-run]     # GitHub releases for plugin versions that have no tag yet
-just new <name> [template]   # create plugins/<name> from a template; asks when omitted
+just sync [plugin...]         # build (Rust sidecar included) and install into %APPDATA%\app.map-making.local\plugins\<id>
+just dev [plugin...]          # watch and sync on every change until Ctrl+C (uses the last built sidecar)
+just test [plugin...]         # run plugin tests, including each sidecar's Rust unit tests
+just package [plugin...]      # build, assemble <plugin>/release/ and zip into dist/ (per platform for plugins with a sidecar)
+just publish [--dry-run]      # start the Release workflow by hand (a push to main starts it automatically)
+just new <name> [template]    # create plugins/<name> from a template; asks when omitted
 ```
 
 Per plugin: `npm run build`, `npm run dev`, `npm test`.
@@ -32,9 +31,6 @@ Per plugin: `npm run build`, `npm run dev`, `npm test`.
   sidecar when the plugin has one. `release/` (generated) adds README, CHANGES.md
   and LICENSE.
 - Close MMA before syncing a plugin whose sidecar exe is in use.
-- Releasing: bump `version` in the manifest, add a `## <version>` entry to the
-  plugin's `CHANGES.md`, commit and push to `main`, then `just publish`. The user
-  does the push and the publish; only `just publish --dry-run` is yours to run.
 
 ## Checklist
 

@@ -6,8 +6,14 @@
 //!   inspect --file chunk_950.om print a remote file's dimensions
 //!   bench                       throughput test on random Australian points
 
+mod era5;
 mod http;
+mod ifs;
 mod lookup;
+mod model;
+mod reader;
+mod statics;
+mod time;
 
 use clap::{Parser, Subcommand};
 use omfiles::reader::OmFileReader;
@@ -18,6 +24,7 @@ use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 pub const BASE: &str = "https://openmeteo.s3.amazonaws.com/data/copernicus_era5/cloud_cover";
+pub const IFS_BASE: &str = "https://openmeteo.s3.amazonaws.com/data/ecmwf_ifs/cloud_cover";
 
 #[derive(Parser)]
 #[command(name = "mma-weather-plus")]
@@ -35,7 +42,7 @@ enum Command {
         input: Option<String>,
         #[arg(long, default_value_t = 128)]
         threads: usize,
-        /// The host passes these to every sidecar; this one needs neither.
+        /// The host passes these to every sidecar; `data_dir` is where the land masks are cached.
         #[arg(long, hide = true)]
         model_dir: Option<String>,
         #[arg(long, hide = true)]
@@ -90,7 +97,7 @@ fn main() {
     };
     let Cli { command } = cli;
     match command {
-        Command::Lookup { input, threads, .. } => lookup::run(input.as_deref(), threads),
+        Command::Lookup { input, threads, data_dir, .. } => lookup::run(input.as_deref(), threads, data_dir.as_deref()),
         Command::Inspect { file } => lookup::inspect(&file),
         Command::Bench { n, threads, from_year, to_year } => bench(n, threads, from_year, to_year),
     }

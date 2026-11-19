@@ -1,8 +1,8 @@
 [package]
 name = "mma-weather-plus"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-description = "Bulk ERA5 cloud cover lookup for the Weather+ MMA plugin, read straight from Open-Meteo's public archive"
+description = "Bulk IFS/ERA5 cloud cover lookup for the Weather+ MMA plugin, read straight from Open-Meteo's public archive"
 # omfiles and the om file format C library are GPL-2.0-only; this binary links them.
 license = "GPL-2.0-only"
 
@@ -18,7 +18,9 @@ clap = { version = "4", features = ["derive"] }
 [profile.release]
 opt-level = 3
 
-# om-file-format-sys finds its C sources through a git symlink, which Windows checks out as a
-# plain text file. setup.mjs copies the sources into vendor/ as real files.
+# om-file-format-sys reaches its C sources through a git symlink, which Windows checks out as a
+# plain text file, and generates its Rust bindings with bindgen (which needs libclang). The
+# vendored copy has the sources as real files and the bindings committed; see
+# vendor/om-file-format-sys/build.rs. Keep it at the rev rust-omfiles pins (see Cargo.lock).
 [patch."https://github.com/open-meteo/om-file-format"]
-om-file-format-sys = { path = "vendor/om-file-format/rust/om-file-format-sys" }
+om-file-format-sys = { path = "vendor/om-file-format-sys" }

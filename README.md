@@ -8,7 +8,7 @@ Plugins for [Map Making App](https://github.com/ccmdi/mma).
 | ------------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------- |
 | **[Moon](plugins/moon/)**            | Moon position, phase and visibility | [Download](https://github.com/Szczurox/Geoguessr/releases?q=moon-v&expanded=true)        |
 | **[Pointer](plugins/pointer/)**      | Pan Street View to a target         | [Download](https://github.com/Szczurox/Geoguessr/releases?q=pointer-v&expanded=true)     |
-| **[Weather+](plugins/weatherPlus/)** | Historical cloud cover (ERA5)       | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true) |
+| **[Weather+](plugins/weatherPlus/)** | Historical cloud cover (IFS, ERA5)  | [Download](https://github.com/Szczurox/Geoguessr/releases?q=weatherPlus-v&expanded=true) |
 |                                      |                                     |                                                                                          |
 | **Bundle**                           | **All plugins in one zip**          | **[Download](https://github.com/Szczurox/Geoguessr/releases/tag/bundle)**                |
 
@@ -21,13 +21,12 @@ and Node.js. A plugin's dependencies install automatically the first time a
 recipe touches it.
 
 ```powershell
-just sync [plugin...]        # build and install into %APPDATA%\app.map-making.local\plugins\<id>
-just dev [plugin...]         # watch and sync on every change until Ctrl+C
-just test [plugin...]        # run plugin tests
-just release [plugin...]     # build and assemble <plugin>/release/
-just package [plugin...]     # release, then zip into dist/
-just publish [--dry-run]     # GitHub releases for plugins whose version has no tag yet
-just new <name> [template]   # create plugins/<name> from templates/ (basic, procedure, sidecar)
+just sync [plugin...]         # build (Rust sidecar included) and install into %APPDATA%\app.map-making.local\plugins\<id>
+just dev [plugin...]          # watch and sync on every change until Ctrl+C (uses the last built sidecar)
+just test [plugin...]         # run plugin tests, including each sidecar's Rust unit tests
+just package [plugin...]      # build, assemble <plugin>/release/ and zip into dist/ (per platform for plugins with a sidecar)
+just publish [--dry-run]      # start the Release workflow by hand (a push to main starts it automatically)
+just new <name> [template]    # create plugins/<name> from templates/ (basic, procedure, sidecar)
 ```
 
 Plugin names are optional; without them a recipe covers every plugin, so
@@ -38,8 +37,3 @@ A single plugin can also be driven from its own folder with `npm run build`,
 `npm test` or `npm run dev`. `build/` is the installable payload and `release/`
 adds the README, CHANGES.md and LICENSE for distribution; both are generated and
 ignored by git.
-
-To release: bump `version` in the plugin's `manifest.json`, add a `## <version>`
-entry to its `CHANGES.md` (the text becomes the release notes), commit and push to
-`main`, then run `just publish`. It needs the [GitHub CLI](https://cli.github.com)
-logged in. See [docs/](docs/) for the architecture and build flow.

@@ -2,13 +2,14 @@
 //
 //   node scaffold/release-plugin.mjs <plugin-directory>
 //
-// Run it after the plugin has been built (`just release` does both). release/ is build/ plus
+// Run it after the plugin has been built (`just package` does both). release/ is build/ plus
 // LICENSE (the plugin's own, else the sidecar's), README.md and CHANGES.md, recreated from scratch
 // each time.
 // Fails when build/ lacks something the manifest promises, e.g. an unbuilt sidecar exe.
 
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { binaryName, targetPlatform } from "./platforms.mjs";
 
 export function releasePlugin(pluginDir) {
 	const src = resolve(pluginDir);
@@ -17,9 +18,11 @@ export function releasePlugin(pluginDir) {
 	if (!existsSync(manifestPath)) throw new Error(`${src} has no build/; build it first`);
 
 	const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-	const sidecarExe = manifest.sidecar && join("sidecar", `${manifest.sidecar.name}.exe`);
+	const platform = targetPlatform();
+	if (manifest.sidecar && !platform) throw new Error(`no sidecar build for ${process.platform}-${process.arch}`);
+	const sidecarExe = manifest.sidecar && join("sidecar", binaryName(manifest.sidecar.name, platform));
 	for (const file of [manifest.main || "index.js", manifest.procedure, sidecarExe].filter(Boolean)) {
-		if (!existsSync(join(build, file))) throw new Error(`build/ is missing ${file}` + (file === sidecarExe ? " (build the sidecar: node setup.mjs && cargo build --release in sidecar/)" : ""));
+		if (!existsSync(join(build, file))) throw new Error(`build/ is missing ${file}` + (file === sidecarExe ? " (the sidecar is built by just sync/release <plugin>)" : ""));
 	}
 
 	const out = join(src, "release");
