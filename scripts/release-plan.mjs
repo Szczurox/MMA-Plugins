@@ -1,5 +1,5 @@
 // Works out which plugins need a release: those whose manifest version has no git tag
-// <id>-v<version> yet. Shared by `just publish` (local checks) and the Release workflow.
+// <id>-v<version> yet. Shared by `just release` (local checks) and the Release workflow.
 //
 //   node scripts/release-plan.mjs [--ci] [--github-output]
 //

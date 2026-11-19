@@ -16,7 +16,7 @@ import { PLATFORMS, PLATFORM_TAGS, bundleArchive, pluginArchive } from "../scaff
 import { git, originRepo, planReleases, printPlan, root } from "./release-plan.mjs";
 
 if (process.env.GITHUB_ACTIONS !== "true") {
-	console.error("Releases are made by the Release workflow. Run `just publish` to start it.");
+	console.error("Releases are made by the Release workflow. Run `just release` to start it.");
 	process.exit(1);
 }
 

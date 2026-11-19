@@ -22,7 +22,7 @@ MMA-Plugins/
   scaffold/              shared build, release and dev scripts, SDK typings
   scripts/               repo task scripts driven by the justfile
   templates/             plugin templates used by `just new`
-  justfile               sync, dev, test, release, package, publish and new recipes
+  justfile               sync, dev, test, package, release and new recipes
   docs/                  this documentation
   .claude/rules/         implementation and verification rules
 ```
